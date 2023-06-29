@@ -1,2 +1,2 @@
 # SimpleOSMinesweeper
-Minesweeper implemented in the Simple OS Assembly Language
+Minesweeper implemented in the Simple OS Assembly Language.
