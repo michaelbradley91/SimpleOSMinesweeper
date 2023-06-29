@@ -1,0 +1,10 @@
+{
+    "screen_height": 720,
+    "screen_width": 1280,
+    "code_address": 4096,
+    "fps": 60,
+    "memory": 8192,
+    "sprites": [],
+    "sounds": [],
+    "music": []
+}
