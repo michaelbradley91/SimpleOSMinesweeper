@@ -1,0 +1,21 @@
+16 x 30 for expert - 99 mines
+13 x 15 for intermediate - 40 mines
+10 x 10 for beginner - 10 mines
+
+1280 / 64 = 20
+720 / 64 = bad
+
+reserve 10 to 640
+
+Then reserve 20 width ways so 10 x 20 = 200. 13 x 15 = 130 + 50 + 15 = 195 roughly the same, so 40 mines
+
+
+10 x 20 of 64 pixels + 80 pixels remaining
+
+Could reduce size by a factor of 4 so Mines are 16 x 16 square, top border is 20 pixels tall.
+Is this enough?
+
+Then 20 pixels for the numbers above.
+It would be 320 x 180
+
+You don't have to use the full size of course...
