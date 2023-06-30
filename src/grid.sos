@@ -1,0 +1,88 @@
+/*
+ * This module contains logic for interacting with the minesweeper grid.
+ */
+
+#include "src/memory_map.sos"
+#include "src/coordinates.sos"
+
+// The meaning of different grid values
+#constant GRID_UNPUSHED_NONE 0x3001
+#constant GRID_UNPUSHED_FLAG 0x3002
+#constant GRID_UNPUSHED_QUESTION_MARK 0x3003
+#constant GRID_PUSHED_MINE 0x3004
+#constant GRID_PUSHED_MINE_HIGHLIGHTED 0x3005
+
+// These are intentionally in order and form an array
+#constant GRID_MINES_0 0x3100 
+#constant GRID_MINES_1 0x3101
+#constant GRID_MINES_2 0x3102
+#constant GRID_MINES_3 0x3103
+#constant GRID_MINES_4 0x3104
+#constant GRID_MINES_5 0x3105
+#constant GRID_MINES_6 0x3106
+#constant GRID_MINES_7 0x3107
+#constant GRID_MINES_8 0x3108
+
+// Temporary values used in this files
+#constant GRID_TEMP_1 0x3200
+#constant GRID_INDEX 03201
+
+// The grid itself!
+#constant GRID_ARRAY 0x3500
+
+JUMP_COND(INCLUDE_GRID, grid_end:)
+store INCLUDE_GRID ONE
+
+// Initialise the various grid values
+store GRID_UNPUSHED_NONE 0
+store GRID_UNPUSHED_FLAG 1
+store GRID_UNPUSHED_QUESTION_MARK 2
+store GRID_PUSHED_MINE 3
+store GRID_PUSHED_MINE_HIGHLIGHTED 4
+
+// The mine numbers array
+store GRID_MINES_0 100
+store GRID_MINES_1 101
+store GRID_MINES_2 102
+store GRID_MINES_3 103
+store GRID_MINES_4 104
+store GRID_MINES_5 105
+store GRID_MINES_6 106
+store GRID_MINES_7 107
+store GRID_MINES_8 108
+
+// Get the grid value for a given number of mines
+#template_begin GET_MINES_VALUE(TGT, NUMBER_MINES)
+ARRAY_GET(TGT, GRID_MINES_0, NUMBER_MINES)
+#template_end
+
+// Set a location on the grid to the given value
+#template_begin SET_GRID(X, Y, VALUE)
+COORDINATES_TO_INDEX(X, Y, GRID_TEMP_1)
+ARRAY_SET(GRID_ARRAY, GRID_TEMP_1, VALUE)
+#template_end
+
+// Get the value of a location from the grid
+#template_begin GET_GRID(TGT, X, Y)
+COORDINATES_TO_INDEX(X, Y, GRID_TEMP_1)
+ARRAY_GET(TGT, GRID_ARRAY, GRID_TEMP_1)
+#template_end
+
+// Begin by clearing the grid
+#template_begin CLEAR_GRID()
+store GRID_INDEX 0
+clear_grid_loop:
+// If we are at the end, jump out
+gte GRID_INDEX GRID_SIZE
+JUMP_COND(RETURN, clear_grid_end:f)
+ARRAY_SET(GRID_ARRAY, GRID_INDEX, GRID_UNPUSHED_NONE)
+INCREMENT(GRID_INDEX)
+JUMP(clear_grid_loop:b)
+clear_grid_end:
+#template_end
+
+// Clear the grid at the start of the game
+CLEAR_GRID()
+
+grid_end:
+nop

@@ -1,0 +1,129 @@
+/* 
+ * This module stores all the locations we need for sprite
+ * drawing in the game.
+ */
+
+#include "./src/memory_map.sos"
+
+#constant PLAY_BUTTON_RECT 0x1100
+#constant HELP_BUTTON_RECT 0x1101
+#constant RADAR_RECT 0x1102
+
+#constant MINES_DIGIT_1_RECT 0x1103
+#constant MINES_DIGIT_2_RECT 0x1104
+#constant MINES_DIGIT_3_RECT 0x1105
+
+#constant FACE_RECT 0x1106
+#constant CLOCK_RECT 0x1107
+
+#constant CLOCK_DIGIT_1_RECT 0x1108
+#constant CLOCK_DIGIT_2_RECT 0x1109
+#constant CLOCK_DIGIT_3_RECT 0x1110
+#constant CLOCK_DIGIT_4_RECT 0x1111
+
+#constant QUIT_RECT 0x1112
+
+// Useful constant for various calculations
+#constant GRID_SQUARE_SIZE 0x1113
+#constant TOP_LEFT_GRID_SQUARE rect(0, 20, 16, 16)
+#constant TEMP_RECT 0x1114
+
+// Where the grid begins
+#constant GRID_RECT_ARRAY 0x1200
+
+JUMP_COND(INCLUDE_COORDINATES, coordinates_end:)
+store INCLUDE_COORDINATES ONE
+
+store PLAY_BUTTON_RECT rect(1, 1, 15, 15)
+store HELP_BUTTON_RECT rect(18, 1, 15, 15)
+store RADAR_RECT rect(73, 3, 13, 13)
+store MINES_DIGIT_1_RECT rect(88, 3, 8, 13)
+store MINES_DIGIT_2_RECT rect(97, 3, 8, 13)
+store MINES_DIGIT_3_RECT rect(106, 3, 8, 13)
+store FACE_RECT rect(153, 2, 15, 15)
+store CLOCK_RECT rect(208, 3, 13, 13)
+store CLOCK_DIGIT_1_RECT rect(223, 3, 8, 13)
+store CLOCK_DIGIT_2_RECT rect(232, 3, 8, 13)
+store CLOCK_DIGIT_3_RECT rect(241, 3, 8, 13)
+store CLOCK_DIGIT_4_RECT rect(250, 3, 8, 13)
+store QUIT_RECT rect(304, 1, 15, 15)
+store GRID_SQUARE_SIZE 16
+
+/* 
+ * The grid of mines begins at x = 0, y = 20
+ * Each square in the grid is then 16 wide and 16 high
+ * 
+ * Soo.... how do we do this?
+ * Probably makes sense to flatten the grid coordinates,
+ * so lets make (x,y) = x + (y * grid size)
+ */
+
+// Convert X, Y coordinates to an index for an array
+#template_begin COORDINATES_TO_INDEX(X, Y, TGT)
+mul Y GRID_WIDTH
+add X RETURN
+copy TGT RETURN
+#template_end
+
+// Convert an index back to coordinates
+#template_begin INDEX_TO_COORDINATES(INDEX, X_TGT, Y_TGT)
+mod INDEX GRID_WIDTH
+copy X_TGT RETURN
+div INDEX GRID_WIDTH
+copy Y_TGT RETURN
+#template_end
+
+store Y_COORD NEGATIVE_ONE
+coordinates_grid_loop_y:
+INCREMENT(Y_COORD)
+
+store X_COORD ZERO
+coordinates_grid_loop_x:
+// Where do we want to store the result?
+mul Y_COORD GRID_WIDTH
+add X_COORD RETURN
+copy COORD_INDEX RETURN
+
+// Now to construct the rectangle...
+
+// Get the x pixel position
+copy X_PIXEL X_COORD
+mul X_PIXEL SIXTEEN
+copy X_PIXEL RETURN
+
+// Get the y pixel position
+copy Y_PIXEL Y_COORD
+add Y_PIXEL TWENTY
+copy Y_PIXEL RETURN
+mul Y_PIXEL SIXTEEN
+copy Y_PIXEL RETURN
+
+// Finally update the example rectangle
+copy TEMP_RECT TOP_LEFT_GRID_SQUARE
+SET_RECT_X(TEMP_RECT, X_PIXEL)
+SET_RECT_Y(TEMP_RECT, Y_PIXEL)
+
+// Now store this in the grid
+ARRAY_SET(GRID_RECT_ARRAY, COORD_INDEX, TEMP_RECT)
+
+// Have we reached the end of the row?
+INCREMENT(X_COORD)
+gte X_COORD GRID_WIDTH
+JUMP_COND(RETURN, coordinates_grid_loop_y:)
+
+// No, continue on this row
+JUMP(coordinates_grid_loop_x:)
+
+// Now all the rectangles for every minesweeper
+// square have been stored. Provide a function to load te rect
+
+#template_begin GET_GRID_RECT(TGT, X, Y)
+// Work out the coordinates
+mul Y_COORD GRID_WIDTH
+add X_COORD RETURN
+add GRID_RECT_ARRAY RETURN
+DEREFERENCE(TGT, RETURN)
+#template_end
+
+coordinates_end:
+nop

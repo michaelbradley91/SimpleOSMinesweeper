@@ -1,0 +1,178 @@
+/*
+ * Keep track of how we are using memory
+ */
+
+// Special addresses
+#constant INTRUCTION_POINTER -1
+#constant RETURN -2
+
+/*
+ * Temporary addresses that can be used for anything
+ */
+#constant TEMP_ADDRESS_START 0x100
+#constant TEMP_ADDRESS_END 0x200
+
+// Common temporary variables
+#constant X_COORD 0x101
+#constant Y_COORD 0x102
+#constant TEMP_1 0x103
+#constant TEMP_2 0x104
+#constant TEMP_3 0x105
+#constant TEMP_4 0x106
+#constant COORD_INDEX 0x107
+#constant GRID_INDEX 0x108
+#constant X_PIXEL 0x109
+#constant Y_PIXEL 0x10a
+
+/* 
+ * Frequently used constants
+ */
+
+#constant ZERO 0x500
+#constant ONE 0x501
+#constant TWO 0x502
+#constant GRID_WIDTH 0x503
+#constant GRID_HEIGHT 0x504
+#constant START_NUMBER_MINES 0x505
+#constant NEGATIVE_ONE 0x506
+#constant TWENTY 0x507
+#constant SIXTEEN 0x508
+#constant THREE 0x509
+#constant FOUR 0x510
+#constant FIVE 0x511
+#constant SIX 0x512
+#constant SEVEN 0x513
+#constant EIGHT 0x514
+#constant NINE 0x515
+#constant TEN 0x516
+#constant ELEVEN 0x517
+#constant TWELVE 0x518
+#constant GRID_SIZE 0x519
+
+/*
+ * Include checks. This allows us to have logic in files
+ * as they are included without accidentally running it
+ * multiple times
+ */
+#constant INCLUDE_MEMORY_MAP 0x1000
+#constant INCLUDE_COORDINATES 0x1001
+#constant INCLUDE_ASSETS 0x1002
+#constant INCLUDE_GRID 0x1003
+
+// Space reserved for the coordinates file
+#constant COORDINATES_START 0x1100
+#constant COORDINATES_END 0x1FFF
+
+// Space reserved for assets
+#constant ASSETS_START 0x2000
+#constant ASSETS_END   0x20FF
+
+// Space reserved for memory memory_map
+#constant MEMORY_MAP_START 0x2100
+#constant MEMORY_MAP_END 0x21FF
+#constant MEMORY_MAP_TEMP_1 0x2100
+#constant MEMORY_MAP_TEMP_2 0x2101
+
+// Space reserved for the grid data
+#constant GRID_START 0x3000
+#constant GRID_END 0x3FFF
+
+/* 
+ * Essential templates
+ */
+#template_begin JUMP_COND(COND, TARGET)
+store MEMORY_MAP_TEMP_1 TARGET
+jmp COND MEMORY_MAP_TEMP_1
+#template_end
+
+#template_begin JUMP(TARGET)
+jmp ONE TARGET
+#template_end
+
+#template_begin INCREMENT(TARGET)
+add TARGET ONE
+copy TARGET RETURN
+#template_end
+
+#template_begin DECREMENT(TARGET)
+sub TARGET ONE
+copy TARGET RETURN
+#template_end
+
+#template_begin SET_RECT_X(RECT, X_COORD)
+and RECT 0xFFFFFFFFFFFF0000
+copy RECT RETURN
+copy MEMORY_MAP_TEMP_1 X_COORD
+mul MEMORY_MAP_TEMP_1 0x1000000000000
+add RECT RETURN
+copy RECT RETURN
+#template_end
+
+#template_begin SET_RECT_Y(RECT, Y_COORD)
+and RECT 0xFFFFFFFF0000FFFF
+copy RECT RETURN
+copy MEMORY_MAP_TEMP_1 Y_COORD
+mul MEMORY_MAP_TEMP_1 0x100000000
+add RECT RETURN
+copy RECT RETURN
+#template_end
+
+#template_begin STORE_INDIRECT(INDIRECT_ADDR, ADDR)
+store MEMORY_MAP_TEMP_1 ADDR
+copy_indirect INDIRECT_ADDR MEMORY_MAP_TEMP_1
+#template_end
+
+#template_begin DEREFERENCE(ADDR, INDIRECT_ADDR)
+store MEMORY_MAP_TEMP_1 ADDR
+copy_indirect MEMORY_MAP_TEMP_1 INDIRECT_ADDR
+#template_end
+
+// Set the index of an array to the given value. I.e.: MEMORY(ARRAY + MEMORY(INDEX)) = MEMORY(VALUE)
+#template_begin ARRAY_SET(ARRAY, INDEX, VALUE)
+// First, calculate the correct address
+store MEMORY_MAP_TEMP_1 ARRAY
+add MEMORY_MAP_TEMP_1 INDEX
+copy MEMORY_MAP_TEMP_1 RETURN
+
+// Now store the value for an indirect copy...
+store MEMORY_MAP_TEMP_2 VALUE
+
+// And set the value
+copy_indirect MEMORY_MAP_TEMP_1 MEMORY_MAP_TEMP_2
+#template_end
+
+// Get the value of an array and put it in TGT. I.e.: MEMORY(TGT) = MEMORY(ARRAY + MEMORY(INDEX))
+#template_begin ARRAY_GET(TGT, ARRAY, INDEX)
+// First, calculate the correct address
+store MEMORY_MAP_TEMP_1 ARRAY
+add MEMORY_MAP_TEMP_1 INDEX
+copy MEMORY_MAP_TEMP_1 RETURN
+
+// Now store the target for an indirect copy...
+store MEMORY_MAP_TEMP_2 TGT
+
+// And get the value
+copy_indirect MEMORY_MAP_TEMP_2 MEMORY_MAP_TEMP_1
+#template_end
+
+// Initialise memory map
+JUMP_COND(INCLUDE_MEMORY_MAP, memory_map_end:)
+store NEGATIVE_ONE -1
+store ZERO 0
+store ONE 1
+store TWO 2
+store TWENTY 20
+store SIXTEEN 16
+
+// Game parameters
+store GRID_WIDTH 20
+store GRID_HEIGHT 10
+mul GRID_WIDTH GRID_HEIGHT
+store GRID_SIZE RETURN
+store START_NUMBER_MINES 40
+
+// Remember we are already initialised
+store INCLUDE_MEMORY_MAP 1
+
+memory_map_end:
+nop

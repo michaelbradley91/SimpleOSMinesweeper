@@ -1,0 +1,292 @@
+/*
+ * Provides references and lookups for the game assets
+ */
+
+#include "./src/memory_map.sos"
+
+#constant SPRITE_BLANKMINEFLAG 0x2000
+#constant SPRITE_BLANKPUSHED 0x2001
+#constant SPRITE_BLANKQUESTIONMARK 0x2002
+#constant SPRITE_BLANKUNPUSHED 0x2003
+#constant SPRITE_CLOCK1 0x2004
+#constant SPRITE_CLOCK10 0x2005
+#constant SPRITE_CLOCK11 0x2006
+#constant SPRITE_CLOCK12 0x2007
+#constant SPRITE_CLOCK2 0x2008
+#constant SPRITE_CLOCK3 0x2009
+#constant SPRITE_CLOCK4 0x200a
+#constant SPRITE_CLOCK5 0x200b
+#constant SPRITE_CLOCK6 0x200c
+#constant SPRITE_CLOCK7 0x200d
+#constant SPRITE_CLOCK8 0x200e
+#constant SPRITE_CLOCK9 0x200f
+#constant SPRITE_DIGIT0 0x2010
+#constant SPRITE_DIGIT1 0x2011
+#constant SPRITE_DIGIT2 0x2012
+#constant SPRITE_DIGIT3 0x2013
+#constant SPRITE_DIGIT4 0x2014
+#constant SPRITE_DIGIT5 0x2015
+#constant SPRITE_DIGIT6 0x2016
+#constant SPRITE_DIGIT7 0x2017
+#constant SPRITE_DIGIT8 0x2018
+#constant SPRITE_DIGIT9 0x2019
+#constant SPRITE_DIGITNONE 0x201a
+#constant SPRITE_EIGHTMINES 0x201b
+#constant SPRITE_FIVEMINES 0x201c
+#constant SPRITE_FOURMINES 0x201d
+#constant SPRITE_HAPPYSMILE 0x201e
+#constant SPRITE_HELPPUSHED 0x201f
+#constant SPRITE_HELPUNPUSHED 0x2020
+#constant SPRITE_MINE 0x2021
+#constant SPRITE_MINEHIGHLIGHTED 0x2022
+#constant SPRITE_MINESWEEPERBACKGROUND 0x2023
+#constant SPRITE_ONEMINE 0x2024
+#constant SPRITE_PLAYPUSHED 0x2025
+#constant SPRITE_PLAYUNPUSHED 0x2026
+#constant SPRITE_RADAR1 0x2027
+#constant SPRITE_RADAR2 0x2028
+#constant SPRITE_RADAR3 0x2029
+#constant SPRITE_RADAR4 0x202a
+#constant SPRITE_RADAR5 0x202b
+#constant SPRITE_RADAR6 0x202c
+#constant SPRITE_RADAR7 0x202d
+#constant SPRITE_RADAR8 0x202e
+#constant SPRITE_SEVENMINES 0x202f
+#constant SPRITE_SIXMINES 0x2030
+#constant SPRITE_SMILEPUSHED 0x2031
+#constant SPRITE_THREEMINES 0x2032
+#constant SPRITE_TWOMINES 0x2033
+#constant SPRITE_UNHAPPYSMILE 0x2034
+
+JUMP_COND(INCLUDE_ASSETS, assets_ends:)
+store INCLUDE_ASSETS ONE
+
+store SPRITE_BLANKMINEFLAG sprite("./Assets/BlankMineFlag.png")
+store SPRITE_BLANKPUSHED sprite("./Assets/BlankPushed.png")
+store SPRITE_BLANKQUESTIONMARK sprite("./Assets/BlankQuestionMark.png")
+store SPRITE_BLANKUNPUSHED sprite("./Assets/BlankUnpushed.png")
+store SPRITE_CLOCK1 sprite("./Assets/Clock1.png")
+store SPRITE_CLOCK10 sprite("./Assets/Clock10.png")
+store SPRITE_CLOCK11 sprite("./Assets/Clock11.png")
+store SPRITE_CLOCK12 sprite("./Assets/Clock12.png")
+store SPRITE_CLOCK2 sprite("./Assets/Clock2.png")
+store SPRITE_CLOCK3 sprite("./Assets/Clock3.png")
+store SPRITE_CLOCK4 sprite("./Assets/Clock4.png")
+store SPRITE_CLOCK5 sprite("./Assets/Clock5.png")
+store SPRITE_CLOCK6 sprite("./Assets/Clock6.png")
+store SPRITE_CLOCK7 sprite("./Assets/Clock7.png")
+store SPRITE_CLOCK8 sprite("./Assets/Clock8.png")
+store SPRITE_CLOCK9 sprite("./Assets/Clock9.png")
+store SPRITE_DIGIT0 sprite("./Assets/Digit0.png")
+store SPRITE_DIGIT1 sprite("./Assets/Digit1.png")
+store SPRITE_DIGIT2 sprite("./Assets/Digit2.png")
+store SPRITE_DIGIT3 sprite("./Assets/Digit3.png")
+store SPRITE_DIGIT4 sprite("./Assets/Digit4.png")
+store SPRITE_DIGIT5 sprite("./Assets/Digit5.png")
+store SPRITE_DIGIT6 sprite("./Assets/Digit6.png")
+store SPRITE_DIGIT7 sprite("./Assets/Digit7.png")
+store SPRITE_DIGIT8 sprite("./Assets/Digit8.png")
+store SPRITE_DIGIT9 sprite("./Assets/Digit9.png")
+store SPRITE_DIGITNONE sprite("./Assets/DigitNone.png")
+store SPRITE_EIGHTMINES sprite("./Assets/EightMines.png")
+store SPRITE_FIVEMINES sprite("./Assets/FiveMines.png")
+store SPRITE_FOURMINES sprite("./Assets/FourMines.png")
+store SPRITE_HAPPYSMILE sprite("./Assets/HappySmile.png")
+store SPRITE_HELPPUSHED sprite("./Assets/HelpPushed.png")
+store SPRITE_HELPUNPUSHED sprite("./Assets/HelpUnpushed.png")
+store SPRITE_MINE sprite("./Assets/Mine.png")
+store SPRITE_MINEHIGHLIGHTED sprite("./Assets/MineHighlighted.png")
+store SPRITE_MINESWEEPERBACKGROUND sprite("./Assets/MinesweeperBackground.png")
+store SPRITE_ONEMINE sprite("./Assets/OneMine.png")
+store SPRITE_PLAYPUSHED sprite("./Assets/PlayPushed.png")
+store SPRITE_PLAYUNPUSHED sprite("./Assets/PlayUnpushed.png")
+store SPRITE_RADAR1 sprite("./Assets/Radar1.png")
+store SPRITE_RADAR2 sprite("./Assets/Radar2.png")
+store SPRITE_RADAR3 sprite("./Assets/Radar3.png")
+store SPRITE_RADAR4 sprite("./Assets/Radar4.png")
+store SPRITE_RADAR5 sprite("./Assets/Radar5.png")
+store SPRITE_RADAR6 sprite("./Assets/Radar6.png")
+store SPRITE_RADAR7 sprite("./Assets/Radar7.png")
+store SPRITE_RADAR8 sprite("./Assets/Radar8.png")
+store SPRITE_SEVENMINES sprite("./Assets/SevenMines.png")
+store SPRITE_SIXMINES sprite("./Assets/SixMines.png")
+store SPRITE_SMILEPUSHED sprite("./Assets/SmilePushed.png")
+store SPRITE_THREEMINES sprite("./Assets/ThreeMines.png")
+store SPRITE_TWOMINES sprite("./Assets/TwoMines.png")
+store SPRITE_UNHAPPYSMILE sprite("./Assets/UnhappySmile.png")
+
+// Get the right sprite based on the mine count
+#template_begin GET_SPRITE_FOR_MINE_COUNT(TGT, COUNT)
+copy TGT SPRITE_BLANKPUSHED
+eq COUNT ZERO
+JUMP_COND(RETURN, found_mine_count_sprite:f)
+
+copy TGT SPRITE_ONEMINE
+eq COUNT ONE
+JUMP_COND(RETURN, found_mine_count_sprite:f)
+
+copy TGT SPRITE_TWOMINES
+eq COUNT TWO
+JUMP_COND(RETURN, found_mine_count_sprite:f)
+
+copy TGT SPRITE_THREEMINES
+eq COUNT THREE
+JUMP_COND(RETURN, found_mine_count_sprite:f)
+
+copy TGT SPRITE_FOURMINES
+eq COUNT FOUR
+JUMP_COND(RETURN, found_mine_count_sprite:f)
+
+copy TGT SPRITE_FIVEMINES
+eq COUNT FIVE
+JUMP_COND(RETURN, found_mine_count_sprite:f)
+
+copy TGT SPRITE_SIXMINES
+eq COUNT SIX
+JUMP_COND(RETURN, found_mine_count_sprite:f)
+
+copy TGT SPRITE_SEVENMINES
+eq COUNT SEVEN
+JUMP_COND(RETURN, found_mine_count_sprite:f)
+
+copy TGT SPRITE_EIGHTMINES
+found_mine_count_sprite:
+nop
+#template_end
+
+// Find the radar animation frame. The frame number should be between 0 and 7
+#template_begin GET_RADAR_ANIMATION_FRAME(TGT, FRAME)
+copy TGT SPRITE_RADAR1
+eq FRAME ZERO
+JUMP_COND(RETURN, found_radar_animation_frame:f)
+
+copy TGT SPRITE_RADAR2
+eq FRAME ONE
+JUMP_COND(RETURN, found_radar_animation_frame:f)
+
+copy TGT SPRITE_RADAR3
+eq FRAME TWO
+JUMP_COND(RETURN, found_radar_animation_frame:f)
+
+copy TGT SPRITE_RADAR4
+eq FRAME THREE
+JUMP_COND(RETURN, found_radar_animation_frame:f)
+
+copy TGT SPRITE_RADAR5
+eq FRAME FOUR
+JUMP_COND(RETURN, found_radar_animation_frame:f)
+
+copy TGT SPRITE_RADAR6
+eq FRAME FIVE
+JUMP_COND(RETURN, found_radar_animation_frame:f)
+
+copy TGT SPRITE_RADAR7
+eq FRAME SIX
+JUMP_COND(RETURN, found_radar_animation_frame:f)
+
+copy TGT SPRITE_RADAR8
+found_radar_animation_frame:
+nop
+#template_end
+
+// Find the right animation frame for the clock. The FRAME number should be between 0 and 11
+#template_begin GET_CLOCK_ANIMATION_FRAME(TGT, FRAME)
+copy TGT SPRITE_CLOCK1
+eq FRAME ZERO
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK2
+eq FRAME ONE
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK3
+eq FRAME TWO
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK4
+eq FRAME THREE
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK5
+eq FRAME FOUR
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK6
+eq FRAME FIVE
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK7
+eq FRAME SIX
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK8
+eq FRAME SEVEN
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK9
+eq FRAME EIGHT
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK10
+eq FRAME NINE
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK11
+eq FRAME TEN
+JUMP_COND(RETURN, found_clock_animation_frame:f)
+
+copy TGT SPRITE_CLOCK12
+found_clock_animation_frame:
+nop
+#template_end
+
+// Find the right sprite for the given digital clock digit.
+// If the digit is not between 0 and 9, "no digit" is returned. I.e.: none of the clock digit is lit.
+#template_begin GET_SPRITE_FOR_DIGIT(TGT, DIGIT)
+copy TGT SPRITE_DIGIT0
+eq DIGIT ZERO
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGIT1
+eq DIGIT ONE
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGIT2
+eq DIGIT TWO
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGIT3
+eq DIGIT THREE
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGIT4
+eq DIGIT FOUR
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGIT5
+eq DIGIT FIVE
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGIT6
+eq DIGIT SIX
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGIT7
+eq DIGIT SEVEN
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGIT8
+eq DIGIT EIGHT
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGIT9
+eq DIGIT NINE
+JUMP_COND(RETURN, found_sprite_for_digit:f)
+
+copy TGT SPRITE_DIGITNONE
+found_sprite_for_digit:
+nop
+#template_end
+
+assets_ends:
+nop

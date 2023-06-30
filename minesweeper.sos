@@ -1,3 +1,9 @@
+/*
+ * The main entry point for minesweeper!
+ */
 
+#include "src/memory_map.sos"
+#include "src/coordinates.sos"
+#include "src/assets.sos"
 
 exit
