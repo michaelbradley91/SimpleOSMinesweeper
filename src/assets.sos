@@ -58,8 +58,8 @@
 #constant SPRITE_TWOMINES 0x2033
 #constant SPRITE_UNHAPPYSMILE 0x2034
 
-JUMP_COND(INCLUDE_ASSETS, assets_ends:)
-store INCLUDE_ASSETS ONE
+JUMP_COND(INCLUDE_ASSETS, assets_ends:f)
+copy INCLUDE_ASSETS ONE
 
 store SPRITE_BLANKMINEFLAG sprite("./Assets/BlankMineFlag.png")
 store SPRITE_BLANKPUSHED sprite("./Assets/BlankPushed.png")

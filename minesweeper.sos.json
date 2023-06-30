@@ -60,5 +60,6 @@
         "./Assets/UnhappySmile.png"
     ],
     "sounds": [],
-    "music": []
+    "music": [],
+    "pixel_perfect": true
 }

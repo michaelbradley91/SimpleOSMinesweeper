@@ -5,5 +5,34 @@
 #include "src/memory_map.sos"
 #include "src/coordinates.sos"
 #include "src/assets.sos"
+#include "src/grid.sos"
+#include "src/events.sos"
+
+CLEAR_GRID()
+DRAW_GRID()
+
+#template_begin CHECK_QUIT()
+WAS_KEY_PRESSED(KEY_Q)
+JUMP_COND(RETURN, end:f)
+#template_end
+
+// Draw the background
+draw SCREEN_RECT SPRITE_MINESWEEPERBACKGROUND
+
+// Main "game" loop
+loop:
+wait
+// Keep processing events until we run out...
+event_loop:
+STORE_EVENT()
+CHECK_QUIT()
+WAS_NO_EVENT()
+
+// If we finished processing events, return to the main loop
+JUMP_COND(RETURN, loop:)
+JUMP(event_loop:)
+
+// Exit the game
+end:
 
 exit

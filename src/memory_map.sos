@@ -48,6 +48,7 @@
 #constant ELEVEN 0x517
 #constant TWELVE 0x518
 #constant GRID_SIZE 0x519
+#constant EVENT_ADDRESS 0x51a
 
 /*
  * Include checks. This allows us to have logic in files
@@ -58,6 +59,7 @@
 #constant INCLUDE_COORDINATES 0x1001
 #constant INCLUDE_ASSETS 0x1002
 #constant INCLUDE_GRID 0x1003
+#constant INCLUDE_EVENTS 0x1004
 
 // Space reserved for the coordinates file
 #constant COORDINATES_START 0x1100
@@ -77,6 +79,10 @@
 #constant GRID_START 0x3000
 #constant GRID_END 0x3FFF
 
+// Space reserved for "keys"
+#constant KEYS_START 0x4000
+#constant KEYS_END 0x4400
+
 /* 
  * Essential templates
  */
@@ -86,7 +92,8 @@ jmp COND MEMORY_MAP_TEMP_1
 #template_end
 
 #template_begin JUMP(TARGET)
-jmp ONE TARGET
+store MEMORY_MAP_TEMP_1 TARGET
+jmp ONE MEMORY_MAP_TEMP_1
 #template_end
 
 #template_begin INCREMENT(TARGET)
@@ -100,19 +107,23 @@ copy TARGET RETURN
 #template_end
 
 #template_begin SET_RECT_X(RECT, X_COORD)
-and RECT 0xFFFFFFFFFFFF0000
+store MEMORY_MAP_TEMP_2 0xFFFFFFFFFFFF0000
+and RECT MEMORY_MAP_TEMP_2
 copy RECT RETURN
 copy MEMORY_MAP_TEMP_1 X_COORD
-mul MEMORY_MAP_TEMP_1 0x1000000000000
+store MEMORY_MAP_TEMP_2 0x1000000000000
+mul MEMORY_MAP_TEMP_1 MEMORY_MAP_TEMP_2
 add RECT RETURN
 copy RECT RETURN
 #template_end
 
 #template_begin SET_RECT_Y(RECT, Y_COORD)
-and RECT 0xFFFFFFFF0000FFFF
+store MEMORY_MAP_TEMP_2 0xFFFFFFFF0000FFFF
+and RECT MEMORY_MAP_TEMP_2
 copy RECT RETURN
 copy MEMORY_MAP_TEMP_1 Y_COORD
-mul MEMORY_MAP_TEMP_1 0x100000000
+store MEMORY_MAP_TEMP_2 0x100000000
+mul MEMORY_MAP_TEMP_1 MEMORY_MAP_TEMP_2
 add RECT RETURN
 copy RECT RETURN
 #template_end
@@ -155,8 +166,14 @@ store MEMORY_MAP_TEMP_2 TGT
 copy_indirect MEMORY_MAP_TEMP_2 MEMORY_MAP_TEMP_1
 #template_end
 
+// Store an event from the event queue
+#template_begin STORE_EVENT()
+get_event
+copy EVENT_ADDRESS RETURN
+#template_end
+
 // Initialise memory map
-JUMP_COND(INCLUDE_MEMORY_MAP, memory_map_end:)
+JUMP_COND(INCLUDE_MEMORY_MAP, memory_map_end:f)
 store NEGATIVE_ONE -1
 store ZERO 0
 store ONE 1

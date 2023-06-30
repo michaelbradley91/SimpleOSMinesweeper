@@ -25,14 +25,18 @@
 
 // Useful constant for various calculations
 #constant GRID_SQUARE_SIZE 0x1113
-#constant TOP_LEFT_GRID_SQUARE rect(0, 20, 16, 16)
 #constant TEMP_RECT 0x1114
+#constant SCREEN_RECT 0x1115
+#constant TOP_LEFT_GRID_SQUARE 0x1116
+
+#constant COORD_TEMP_1 0x1117
+#constant COORD_TEMP_2 0x1118
 
 // Where the grid begins
 #constant GRID_RECT_ARRAY 0x1200
 
-JUMP_COND(INCLUDE_COORDINATES, coordinates_end:)
-store INCLUDE_COORDINATES ONE
+JUMP_COND(INCLUDE_COORDINATES, coordinates_end:f)
+copy INCLUDE_COORDINATES ONE
 
 store PLAY_BUTTON_RECT rect(1, 1, 15, 15)
 store HELP_BUTTON_RECT rect(18, 1, 15, 15)
@@ -48,6 +52,8 @@ store CLOCK_DIGIT_3_RECT rect(241, 3, 8, 13)
 store CLOCK_DIGIT_4_RECT rect(250, 3, 8, 13)
 store QUIT_RECT rect(304, 1, 15, 15)
 store GRID_SQUARE_SIZE 16
+store SCREEN_RECT rect(0, 0, 320, 180)
+store TOP_LEFT_GRID_SQUARE rect(0, 20, 16, 16)
 
 /* 
  * The grid of mines begins at x = 0, y = 20
@@ -59,70 +65,39 @@ store GRID_SQUARE_SIZE 16
  */
 
 // Convert X, Y coordinates to an index for an array
-#template_begin COORDINATES_TO_INDEX(X, Y, TGT)
+#template_begin COORDINATES_TO_INDEX(TGT, X, Y)
 mul Y GRID_WIDTH
 add X RETURN
 copy TGT RETURN
 #template_end
 
 // Convert an index back to coordinates
-#template_begin INDEX_TO_COORDINATES(INDEX, X_TGT, Y_TGT)
+#template_begin INDEX_TO_COORDINATES(X_TGT, Y_TGT, INDEX)
 mod INDEX GRID_WIDTH
 copy X_TGT RETURN
 div INDEX GRID_WIDTH
 copy Y_TGT RETURN
 #template_end
 
-store Y_COORD NEGATIVE_ONE
-coordinates_grid_loop_y:
-INCREMENT(Y_COORD)
-
-store X_COORD ZERO
-coordinates_grid_loop_x:
-// Where do we want to store the result?
-mul Y_COORD GRID_WIDTH
-add X_COORD RETURN
-copy COORD_INDEX RETURN
-
-// Now to construct the rectangle...
-
-// Get the x pixel position
-copy X_PIXEL X_COORD
+// Get the rectangle on the grid at the given coordinates
+#template_begin GET_GRID_RECT(TGT, X, Y)
+copy X_PIXEL X
 mul X_PIXEL SIXTEEN
 copy X_PIXEL RETURN
 
 // Get the y pixel position
-copy Y_PIXEL Y_COORD
+copy Y_PIXEL Y
 add Y_PIXEL TWENTY
 copy Y_PIXEL RETURN
 mul Y_PIXEL SIXTEEN
 copy Y_PIXEL RETURN
 
-// Finally update the example rectangle
+// Work out the coordinates
 copy TEMP_RECT TOP_LEFT_GRID_SQUARE
 SET_RECT_X(TEMP_RECT, X_PIXEL)
 SET_RECT_Y(TEMP_RECT, Y_PIXEL)
 
-// Now store this in the grid
-ARRAY_SET(GRID_RECT_ARRAY, COORD_INDEX, TEMP_RECT)
-
-// Have we reached the end of the row?
-INCREMENT(X_COORD)
-gte X_COORD GRID_WIDTH
-JUMP_COND(RETURN, coordinates_grid_loop_y:)
-
-// No, continue on this row
-JUMP(coordinates_grid_loop_x:)
-
-// Now all the rectangles for every minesweeper
-// square have been stored. Provide a function to load te rect
-
-#template_begin GET_GRID_RECT(TGT, X, Y)
-// Work out the coordinates
-mul Y_COORD GRID_WIDTH
-add X_COORD RETURN
-add GRID_RECT_ARRAY RETURN
-DEREFERENCE(TGT, RETURN)
+copy TGT TEMP_RECT
 #template_end
 
 coordinates_end:

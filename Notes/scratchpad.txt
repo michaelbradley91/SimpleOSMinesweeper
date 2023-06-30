@@ -19,3 +19,19 @@ Then 20 pixels for the numbers above.
 It would be 320 x 180
 
 You don't have to use the full size of course...
+
+Debugging
+In Godot window, code in memory starts at
+1639
+
+Handy command for extracting the code... usually works
+xxd minesweeper.sox | grep -A 1000000 "$(xxd minesweeper.sox | grep "0000 0000 0000 0000 0000 0000 0000 0000" | head -n1)" > code.txt
+
+To go from godot to file coordinates:
+hex(((0x806a - 0x8000) * 16) + 0x000031b0)
+hex(((<GODOT> - 0x8000) * 16) + 0x000031b0)
+
+(assuming no asset change)
+
+x_coord is 257 - page 13
+y_coord is nex to it
