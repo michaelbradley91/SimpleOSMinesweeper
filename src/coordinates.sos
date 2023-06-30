@@ -87,13 +87,14 @@ copy X_PIXEL RETURN
 
 // Get the y pixel position
 copy Y_PIXEL Y
-add Y_PIXEL TWENTY
-copy Y_PIXEL RETURN
 mul Y_PIXEL SIXTEEN
+copy Y_PIXEL RETURN
+add Y_PIXEL TWENTY
 copy Y_PIXEL RETURN
 
 // Work out the coordinates
 copy TEMP_RECT TOP_LEFT_GRID_SQUARE
+
 SET_RECT_X(TEMP_RECT, X_PIXEL)
 SET_RECT_Y(TEMP_RECT, Y_PIXEL)
 

@@ -74,13 +74,13 @@ ARRAY_GET(TGT, GRID_MINES_0, NUMBER_MINES)
 
 // Set a location on the grid to the given value
 #template_begin SET_GRID(X, Y, VALUE)
-COORDINATES_TO_INDEX(X, Y, GRID_TEMP_1)
+COORDINATES_TO_INDEX(GRID_TEMP_1, X, Y)
 ARRAY_SET(GRID_ARRAY, GRID_TEMP_1, VALUE)
 #template_end
 
 // Get the value of a location from the grid
 #template_begin GET_GRID(TGT, X, Y)
-COORDINATES_TO_INDEX(X, Y, GRID_TEMP_1)
+COORDINATES_TO_INDEX(GRID_TEMP_1, X, Y)
 ARRAY_GET(TGT, GRID_ARRAY, GRID_TEMP_1)
 #template_end
 

@@ -19,8 +19,13 @@ JUMP_COND(RETURN, end:f)
 // Draw the background
 draw SCREEN_RECT SPRITE_MINESWEEPERBACKGROUND
 
+
+
 // Main "game" loop
 loop:
+// Try drawing on the grid
+SET_GRID(ZERO, ZERO, GRID_PUSHED_MINE)
+DRAW_GRID_SQUARE(ZERO, ZERO)
 wait
 // Keep processing events until we run out...
 event_loop:
