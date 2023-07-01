@@ -203,8 +203,24 @@
 #constant KEY_JIS_EISU 4194418
 #constant KEY_JIS_KANA 4194419
 
+#constant MOUSE_BUTTON_NONE 0
+#constant MOUSE_BUTTON_LEFT 1
+#constant MOUSE_BUTTON_RIGHT 2
+#constant MOUSE_BUTTON_MIDDLE 3
+#constant MOUSE_BUTTON_WHEEL_UP 4
+#constant MOUSE_BUTTON_WHEEL_DOWN 5
+#constant MOUSE_BUTTON_WHEEL_LEFT 6
+#constant MOUSE_BUTTON_WHEEL_RIGHT 7
+#constant MOUSE_BUTTON_XBUTTON1 8
+#constant MOUSE_BUTTON_XBUTTON2 9
+
 #constant EVENTS_TEMP_1 0x4000
 #constant EVENTS_TEMP_2 0x4001
+
+#constant EVENT_TYPE_MOUSE_BUTTON_PRESSED 0x4002
+#constant EVENT_TYPE_MOUSE_BUTTON_RELEASED 0x4003
+#constant EVENT_TYPE_KEY_PRESSED 0x4004
+#constant EVENT_TYPE_KEY_RELEASED 0x4005
 
 // Check if the event in the EVENT_ADDRESS corresponds to a key pressed. The result is put in the RETURN address
 #template_begin WAS_KEY_PRESSED(KEYCODE)
@@ -217,8 +233,52 @@ eq EVENTS_TEMP_1 EVENT_ADDRESS
 eq NO_EVENT EVENT_ADDRESS
 #template_end
 
+// Does the event in the event address represent a mouse button pressed?
+#template_begin WAS_MOUSE_BUTTON_PRESSED(BUTTON)
+store EVENTS_TEMP_1 mouse_pressed(0, 0, BUTTON)
+// Remove the (x,y) component
+store EVENTS_TEMP_2 0xFFFF00000000FFFF
+and EVENT_ADDRESS EVENTS_TEMP_2
+eq RETURN EVENTS_TEMP_1
+#template_end
+
+// Does the event in the event address represent a mouse button released?
+#template_begin WAS_MOUSE_BUTTON_RELEASED(BUTTON)
+store EVENTS_TEMP_1 mouse_released(0, 0, BUTTON)
+// Remove the (x,y) component
+store EVENTS_TEMP_2 0xFFFF00000000FFFF
+and EVENT_ADDRESS EVENTS_TEMP_2
+eq RETURN EVENTS_TEMP_1
+#template_end
+
+// Get the pixel coordinates of the mouse from the event
+#template_begin GET_MOUSE_EVENT_PIXEL_COORDS(TGT_PIXEL_X, TGT_PIXEL_Y)
+div EVENT_ADDRESS TWO_TO_THE_SIXTEEN
+mod RETURN TWO_TO_THE_SIXTEEN
+copy TGT_PIXEL_Y RETURN
+div EVENT_ADDRESS TWO_TO_THE_THIRTY_TWO
+mod RETURN TWO_TO_THE_SIXTEEN
+copy TGT_PIXEL_X RETURN
+#template_end
+
+// Uses get_mouse to get the current mouse position
+#template_begin GET_MOUSE_PIXEL_COORDS(TGT_PIXEL_X, TGT_PIXEL_Y)
+get_mouse
+copy EVENTS_TEMP_1 RETURN
+mod EVENTS_TEMP_1 TWO_TO_THE_SIXTEEN
+copy TGT_PIXEL_Y RETURN
+div EVENTS_TEMP_1 TWO_TO_THE_SIXTEEN
+mod RETURN TWO_TO_THE_SIXTEEN
+copy TGT_PIXEL_X RETURN
+#template_end
+
 JUMP_COND(INCLUDE_EVENTS, events_end:f)
 copy INCLUDE_EVENTS ONE
+
+store EVENT_TYPE_KEY_PRESSED 3
+store EVENT_TYPE_KEY_RELEASED 4
+store EVENT_TYPE_MOUSE_BUTTON_PRESSED 1
+store EVENT_TYPE_MOUSE_BUTTON_RELEASED 2
 
 events_end:
 nop

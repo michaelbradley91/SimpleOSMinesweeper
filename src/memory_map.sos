@@ -20,7 +20,6 @@
 #constant TEMP_3 0x105
 #constant TEMP_4 0x106
 #constant COORD_INDEX 0x107
-#constant GRID_INDEX 0x108
 #constant X_PIXEL 0x109
 #constant Y_PIXEL 0x10a
 
@@ -49,7 +48,8 @@
 #constant TWELVE 0x518
 #constant GRID_SIZE 0x519
 #constant EVENT_ADDRESS 0x51a
-
+#constant TWO_TO_THE_SIXTEEN 0x51b
+#constant TWO_TO_THE_THIRTY_TWO 0x51c
 /*
  * Include checks. This allows us to have logic in files
  * as they are included without accidentally running it
@@ -60,6 +60,7 @@
 #constant INCLUDE_ASSETS 0x1002
 #constant INCLUDE_GRID 0x1003
 #constant INCLUDE_EVENTS 0x1004
+#constant INCLUDE_ANIMATOR 0x1005
 
 // Space reserved for the coordinates file
 #constant COORDINATES_START 0x1100
@@ -72,17 +73,42 @@
 // Space reserved for memory memory_map
 #constant MEMORY_MAP_START 0x2100
 #constant MEMORY_MAP_END 0x21FF
+
+// Temporary variables
 #constant MEMORY_MAP_TEMP_1 0x2100
 #constant MEMORY_MAP_TEMP_2 0x2101
 #constant MEMORY_MAP_TEMP_3 0x2102
+#constant MEMORY_MAP_TEMP_X 0x2103
+#constant MEMORY_MAP_TEMP_Y 0x2104
+#constant MEMORY_MAP_TEMP_WIDTH 0x2105
+#constant MEMORY_MAP_TEMP_HEIGHT 0x2106
+#constant MEMORY_MAP_TEMP_ANSWER 0x2107
+#constant MEMORY_MAP_TEMP_RANDOM 0x2108
+#constant MEMORY_MAP_TEMP_STACK_INDEX 02109
+
+// Game outcomes
+#constant GAME_WIN 0x21a0
+#constant GAME_LOSE 0x21a1
+#constant GAME_CONTINUE 0x21a2
 
 // Space reserved for the grid data
 #constant GRID_START 0x3000
 #constant GRID_END 0x3FFF
 
-// Space reserved for "keys"
-#constant KEYS_START 0x4000
-#constant KEYS_END 0x4400
+// Space reserved for "events"
+#constant EVENTS_START 0x4000
+#constant EVENTS_END 0x43FF
+
+// Space reserved for animations
+#constant ANIMATOR_START 0x4400
+#constant ANIMATOR_END 0x4600
+
+// Space reserved for the main executable
+#constant MAIN_START 0x5000
+#constant MAIN_END 0x5FFF
+
+// Used when debugging the commands in Godot
+#constant DEBUG 0x7711
 
 /* 
  * Essential templates
@@ -90,6 +116,15 @@
 #template_begin JUMP_COND(COND, TARGET)
 store MEMORY_MAP_TEMP_1 TARGET
 jmp COND MEMORY_MAP_TEMP_1
+#template_end
+
+#template_begin JUMP_NOT_COND(COND, TARGET)
+store MEMORY_MAP_TEMP_1 TARGET
+store MEMORY_MAP_TEMP_2 memory_map_skip_jump:f
+jmp COND MEMORY_MAP_TEMP_2
+jmp ONE MEMORY_MAP_TEMP_1
+memory_map_skip_jump:
+nop
 #template_end
 
 #template_begin JUMP(TARGET)
@@ -173,21 +208,119 @@ get_event
 copy EVENT_ADDRESS RETURN
 #template_end
 
+// Get a random number from 0 (inclusive) to the maximum value exclusive
+#template_begin GET_RANDOM(TGT, MAX)
+random
+copy MEMORY_MAP_TEMP_RANDOM RETURN
+// Random can return negative numbers, so we have to adjust for that...
+gte MEMORY_MAP_TEMP_RANDOM ZERO
+JUMP_COND(RETURN, memory_map_skip_negative_correction:f)
+mul MEMORY_MAP_TEMP_RANDOM NEGATIVE_ONE
+copy MEMORY_MAP_TEMP_RANDOM RETURN
+memory_map_skip_negative_correction:
+
+mod MEMORY_MAP_TEMP_RANDOM MAX
+copy TGT RETURN
+#template_end
+
+// Extract the different components from a rectangle
+#template_begin EXTRACT_RECT(TGT_X, TGT_Y, TGT_WIDTH, TGT_HEIGHT, RECT)
+copy MEMORY_MAP_TEMP_1 RECT
+
+mod MEMORY_MAP_TEMP_1 TWO_TO_THE_SIXTEEN
+copy TGT_HEIGHT RETURN
+div MEMORY_MAP_TEMP_1 TWO_TO_THE_SIXTEEN
+copy MEMORY_MAP_TEMP_1 RETURN
+
+mod MEMORY_MAP_TEMP_1 TWO_TO_THE_SIXTEEN
+copy TGT_WIDTH RETURN
+div MEMORY_MAP_TEMP_1 TWO_TO_THE_SIXTEEN
+copy MEMORY_MAP_TEMP_1 RETURN
+
+mod MEMORY_MAP_TEMP_1 TWO_TO_THE_SIXTEEN
+copy TGT_Y RETURN
+div MEMORY_MAP_TEMP_1 TWO_TO_THE_SIXTEEN
+copy MEMORY_MAP_TEMP_1 RETURN
+
+mod MEMORY_MAP_TEMP_1 TWO_TO_THE_SIXTEEN
+copy TGT_X RETURN
+#template_end
+
+// Calculate if a pixel coordinate is within a rectangle
+#template_begin IS_WITHIN_RECT(PIXEL_X, PIXEL_Y, RECT)
+// Extract the rectangle details
+store MEMORY_MAP_TEMP_ANSWER 0
+EXTRACT_RECT(MEMORY_MAP_TEMP_X, MEMORY_MAP_TEMP_Y, MEMORY_MAP_TEMP_WIDTH, MEMORY_MAP_TEMP_HEIGHT, RECT)
+
+// Does the x coordinate fit inside?
+lt PIXEL_X MEMORY_MAP_TEMP_X
+JUMP_COND(RETURN, is_within_rect_end:f)
+
+add MEMORY_MAP_TEMP_WIDTH MEMORY_MAP_TEMP_X
+gte PIXEL_X RETURN
+JUMP_COND(RETURN, is_within_rect_end:f)
+
+// Does the y coordinate fit inside?
+lt PIXEL_Y MEMORY_MAP_TEMP_Y
+JUMP_COND(RETURN, is_within_rect_end:f)
+
+add MEMORY_MAP_TEMP_HEIGHT MEMORY_MAP_TEMP_Y
+gte PIXEL_Y RETURN
+JUMP_COND(RETURN, is_within_rect_end:f)
+
+// Yes, they both do so it is inside the rectangle
+store MEMORY_MAP_TEMP_ANSWER 1
+
+is_within_rect_end:
+copy RETURN MEMORY_MAP_TEMP_ANSWER
+#template_end
+
+// Stack handling templates
+#template_begin STACK_CLEAR(STACK_SIZE, STACK_BASE)
+store STACK_SIZE 0
+#template_end
+
+#template_begin STACK_PUSH(STACK_SIZE, STACK_BASE, VALUE)
+ARRAY_SET(STACK_BASE, STACK_SIZE, VALUE)
+INCREMENT(STACK_SIZE)
+#template_end
+
+#template_begin STACK_POP(TGT, STACK_SIZE, STACK_BASE)
+sub STACK_SIZE ONE
+copy STACK_SIZE RETURN
+ARRAY_GET(TGT, STACK_BASE, STACK_SIZE)
+#template_end
+
 // Initialise memory map
 JUMP_COND(INCLUDE_MEMORY_MAP, memory_map_end:f)
 store NEGATIVE_ONE -1
 store ZERO 0
 store ONE 1
 store TWO 2
-store TWENTY 20
+store THREE 3
+store FOUR 4
+store FIVE 5
+store SIX 6
+store SEVEN 7
+store EIGHT 8
+store NINE 9
+store TEN 10
+store ELEVEN 11
+store TWELVE 12
 store SIXTEEN 16
+store TWENTY 20
+store TWO_TO_THE_SIXTEEN 0x10000
+store TWO_TO_THE_THIRTY_TWO 0x100000000
 
 // Game parameters
 store GRID_WIDTH 20
 store GRID_HEIGHT 10
 mul GRID_WIDTH GRID_HEIGHT
-store GRID_SIZE RETURN
+copy GRID_SIZE RETURN
 store START_NUMBER_MINES 40
+store GAME_WIN 1
+store GAME_LOSE 2
+store GAME_CONTINUE 3
 
 // Remember we are already initialised
 store INCLUDE_MEMORY_MAP 1

@@ -32,6 +32,8 @@
 #constant COORD_TEMP_1 0x1117
 #constant COORD_TEMP_2 0x1118
 
+#constant FULL_GRID_RECT 0x1119
+
 // Where the grid begins
 #constant GRID_RECT_ARRAY 0x1200
 
@@ -54,6 +56,7 @@ store QUIT_RECT rect(304, 1, 15, 15)
 store GRID_SQUARE_SIZE 16
 store SCREEN_RECT rect(0, 0, 320, 180)
 store TOP_LEFT_GRID_SQUARE rect(0, 20, 16, 16)
+store FULL_GRID_RECT rect(0, 20, 320, 160)
 
 /* 
  * The grid of mines begins at x = 0, y = 20

@@ -1,0 +1,59 @@
+/*
+ * This file contains logic for updating animated parts of the game
+ */
+
+#include "src/memory_map.sos"
+#include "src/assets.sos"
+#include "src/coordinates.sos"
+
+// Animation parameters
+#constant RADAR_ANIMATION_FRAME_COUNT 0x4400
+#constant RADAR_ANIMATION_FRAME_DURATION_MILLISECONDS 0x4401
+#constant CLOCK_ANIMATION_FRAME_COUNT 0x4402
+#constant CLOCK_ANIMATION_FRAME_DURATION_MILLISECONDS 0x4403
+
+#constant ANIMATOR_TEMP_1 0x4404
+#constant ANIMATOR_TEMP_2 0x4405
+
+// Get the right frame to show for an animation based on the number of ticks that have passed
+#template_begin GET_ANIMATION_FRAME(TGT, FRAME_DURATION_MILLISECONDS, FRAME_COUNT)
+get_ticks
+copy ANIMATOR_TEMP_1 RETURN
+div ANIMATOR_TEMP_1 FRAME_DURATION_MILLISECONDS
+copy ANIMATOR_TEMP_1 RETURN
+mod ANIMATOR_TEMP_1 FRAME_COUNT
+copy TGT RETURN
+#template_end
+
+// Update the radar sprite based on the number of ticks that have passed
+#template_begin UPDATE_RADAR_ANIMATION()
+GET_ANIMATION_FRAME(ANIMATOR_TEMP_1, RADAR_ANIMATION_FRAME_DURATION_MILLISECONDS, RADAR_ANIMATION_FRAME_COUNT)
+GET_RADAR_ANIMATION_FRAME(ANIMATOR_TEMP_2, ANIMATOR_TEMP_1)
+draw RADAR_RECT ANIMATOR_TEMP_2
+#template_end
+
+#template_begin UPDATE_CLOCK_ANIMATION()
+GET_ANIMATION_FRAME(ANIMATOR_TEMP_1, CLOCK_ANIMATION_FRAME_DURATION_MILLISECONDS, CLOCK_ANIMATION_FRAME_COUNT)
+GET_CLOCK_ANIMATION_FRAME(ANIMATOR_TEMP_2, ANIMATOR_TEMP_1)
+draw CLOCK_RECT ANIMATOR_TEMP_2
+#template_end
+
+#template_begin UPDATE_ANIMATIONS()
+UPDATE_RADAR_ANIMATION()
+UPDATE_CLOCK_ANIMATION()
+#template_end
+
+JUMP_COND(INCLUDE_ANIMATOR, animator_end:f)
+copy INCLUDE_ANIMATOR ONE
+
+// Play a radar frame every 70 milliseconds
+store RADAR_ANIMATION_FRAME_COUNT 8
+store RADAR_ANIMATION_FRAME_DURATION_MILLISECONDS 100
+
+// Play a clock animation every 5 seconds
+store CLOCK_ANIMATION_FRAME_COUNT 12
+store CLOCK_ANIMATION_FRAME_DURATION_MILLISECONDS 5000
+
+UPDATE_ANIMATIONS()
+animator_end:
+nop

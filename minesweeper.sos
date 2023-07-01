@@ -7,35 +7,89 @@
 #include "src/assets.sos"
 #include "src/grid.sos"
 #include "src/events.sos"
+#include "src/animator.sos"
 
-CLEAR_GRID()
-DRAW_GRID()
+#constant MOUSE_PIXEL_X 0x5000
+#constant MOUSE_PIXEL_Y 0x5001
+#constant MOUSE_COORD_X 0x5002
+#constant MOUSE_COORD_Y 0x5003
+#constant MINES_ARE_PLACED 0x5004
+#constant MINE_COUNT 0x5005
+#constant MINE_COUNT_GRID_VALUE 0x5006
 
+// Should we exit the game
 #template_begin CHECK_QUIT()
 WAS_KEY_PRESSED(KEY_Q)
 JUMP_COND(RETURN, end:f)
 #template_end
 
+#template_begin RESET()
+RESET_GAME()
+store MINES_ARE_PLACED 0
+#template_end
+
 // Draw the background
 draw SCREEN_RECT SPRITE_MINESWEEPERBACKGROUND
-
-
 
 // Main "game" loop
 loop:
 // Try drawing on the grid
-SET_GRID(ZERO, ZERO, GRID_PUSHED_MINE)
-DRAW_GRID_SQUARE(ZERO, ZERO)
+UPDATE_ANIMATIONS()
 wait
 // Keep processing events until we run out...
 event_loop:
 STORE_EVENT()
 CHECK_QUIT()
-WAS_NO_EVENT()
+
+WAS_MOUSE_BUTTON_PRESSED(MOUSE_BUTTON_LEFT)
+JUMP_NOT_COND(RETURN, mouse_event_button_left_end:f)
+
+// The left mouse button was pressed! Where?
+GET_MOUSE_EVENT_PIXEL_COORDS(MOUSE_PIXEL_X, MOUSE_PIXEL_Y)
+
+IS_WITHIN_RECT(MOUSE_PIXEL_X, MOUSE_PIXEL_Y, FULL_GRID_RECT)
+JUMP_NOT_COND(RETURN, not_inside_grid:f)
+
+// Convert to grid coordinates
+PIXEL_TO_GRID_COORDS(MOUSE_COORD_X, MOUSE_COORD_Y, MOUSE_PIXEL_X, MOUSE_PIXEL_Y)
+
+// Now do something! TODO
+// If mines have not been placed, do that now
+eq MINES_ARE_PLACED ONE
+JUMP_COND(RETURN, mines_placed:f)
+ADD_MINES(START_NUMBER_MINES, MOUSE_COORD_X, MOUSE_COORD_Y)
+store MINES_ARE_PLACED 1
+mines_placed:
+
+// If this is a mine, we lose
+HAS_MINE(MOUSE_COORD_X, MOUSE_COORD_Y)
+JUMP_COND(RETURN, lose:f)
+
+// We are alive! Draw the number of mines
+PUSH_SQUARE(MOUSE_COORD_X, MOUSE_COORD_Y)
+
+JUMP(event_loop:b)
+
+not_inside_grid:
+// TODO: handle other locations
+
+mouse_event_button_left_end:
+
+// other events go here
 
 // If we finished processing events, return to the main loop
+WAS_NO_EVENT()
 JUMP_COND(RETURN, loop:)
+
+// Otherwise look at the next event
 JUMP(event_loop:)
+
+lose:
+// Oh no! Show all the mines...
+REVEAL_MINES()
+SET_GRID(MOUSE_COORD_X, MOUSE_COORD_Y, GRID_PUSHED_MINE_HIGHLIGHTED)
+DRAW_GRID_SQUARE(MOUSE_COORD_X, MOUSE_COORD_Y)
+JUMP(event_loop:b)
 
 // Exit the game
 end:

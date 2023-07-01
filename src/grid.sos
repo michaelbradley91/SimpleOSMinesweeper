@@ -26,15 +26,38 @@
 
 // Temporary values used in this files
 #constant GRID_TEMP_1 0x3200
-#constant GRID_INDEX 03201
+#constant GRID_INDEX 0x3201
 #constant GRID_TEMP_2 0x3202
 #constant GRID_TEMP_3 0x3203
 #constant GRID_TEMP_X 0x3204
-#constant GRID_TEMP_Y 0x3205
 #constant GRID_TEMP_4 0x3206
+#constant GRID_TEMP_Y 0x3205
+#constant MINE_NUMBER 0x3207
+#constant GRID_TEMP_PLAYER 0x3208
+#constant GRID_TEMP_NEIGHBOUR_LEFT 0x3209
+#constant GRID_TEMP_NEIGHBOUR_RIGHT 0x320a
+#constant GRID_TEMP_NEIGHBOUR_BOTTOM 0x320b
+#constant GRID_TEMP_NEIGHBOUR_TOP 0x320c
+#constant GRID_TEMP_MINE_COUNT 0x320d
+#constant GRID_TEMP_5 0x320e
+#constant GRID_TEMP_6 0x320f
+#constant GRID_TEMP_INDEX 0x3210
+#constant GRID_TEMP_NEIGHBOUR_LEFT_2 0x3211
+#constant GRID_TEMP_NEIGHBOUR_RIGHT_2 0x3212
+#constant GRID_TEMP_NEIGHBOUR_BOTTOM_2 0x3213
+#constant GRID_TEMP_NEIGHBOUR_TOP_2 0x3214
+#constant GRID_TEMP_REVEAL_X 0x3215
+#constant GRID_TEMP_REVEAL_Y 0x3216
+#constant GRID_TEMP_MINE_COUNT_2 0x3217
+#constant GRID_TEMP_7 0x3218
 
 // The grid itself!
 #constant GRID_ARRAY 0x3500
+#constant MINES_ARRAY 0x3600
+
+// An array that acts like a stack
+#constant GRID_ZEROES_STACK_SIZE 0x3700
+#constant GRID_ZEROES_STACK 0x3701
 
 JUMP_COND(INCLUDE_GRID, grid_end:f)
 copy INCLUDE_GRID ONE
@@ -82,6 +105,29 @@ ARRAY_SET(GRID_ARRAY, GRID_TEMP_1, VALUE)
 #template_begin GET_GRID(TGT, X, Y)
 COORDINATES_TO_INDEX(GRID_TEMP_1, X, Y)
 ARRAY_GET(TGT, GRID_ARRAY, GRID_TEMP_1)
+#template_end
+
+#template_begin ADD_MINE(X, Y)
+COORDINATES_TO_INDEX(GRID_TEMP_1, X, Y)
+ARRAY_SET(MINES_ARRAY, GRID_TEMP_1, ONE)
+#template_end
+
+#template_begin HAS_MINE(X, Y)
+COORDINATES_TO_INDEX(GRID_TEMP_1, X, Y)
+ARRAY_GET(GRID_TEMP_2, MINES_ARRAY, GRID_TEMP_1)
+eq GRID_TEMP_2 ONE
+#template_end
+
+#template_begin CLEAR_MINES()
+store GRID_INDEX 0
+clear_mines_loop:
+// If we are at the end, jump out
+gte GRID_INDEX GRID_SIZE
+JUMP_COND(RETURN, clear_mines_end:f)
+ARRAY_SET(MINES_ARRAY, GRID_INDEX, ZERO)
+INCREMENT(GRID_INDEX)
+JUMP(clear_mines_loop:b)
+clear_mines_end:
 #template_end
 
 // Begin by clearing the grid
@@ -143,7 +189,7 @@ gte GRID_INDEX GRID_SIZE
 JUMP_COND(RETURN, draw_entire_grid_end:f)
 
 // Get the rectangle to draw in
-INDEX_TO_COORDINATES(GRID_INDEX, GRID_TEMP_X, GRID_TEMP_Y)
+INDEX_TO_COORDINATES(GRID_TEMP_X, GRID_TEMP_Y, GRID_INDEX)
 DRAW_GRID_SQUARE(GRID_TEMP_X, GRID_TEMP_Y)
 
 INCREMENT(GRID_INDEX)
@@ -151,8 +197,374 @@ JUMP(draw_entire_grid_loop:b)
 draw_entire_grid_end:
 #template_end
 
+// Show all the mines on the grid
+#template_begin REVEAL_MINES()
+store GRID_INDEX 0
+reveal_mines_loop:
+// If we are at the end, jump out
+gte GRID_INDEX GRID_SIZE
+JUMP_COND(RETURN, reveal_mines_end:f)
+
+// Does this square have a mine?
+ARRAY_GET(GRID_TEMP_1, MINES_ARRAY, GRID_INDEX)
+neq GRID_TEMP_1 ONE
+JUMP_COND(RETURN, reveal_mines_continue:f)
+
+// Yes! Show it
+INDEX_TO_COORDINATES(GRID_TEMP_X, GRID_TEMP_Y, GRID_INDEX)
+SET_GRID(GRID_TEMP_X, GRID_TEMP_Y, GRID_PUSHED_MINE)
+DRAW_GRID_SQUARE(GRID_TEMP_X, GRID_TEMP_Y)
+
+reveal_mines_continue:
+INCREMENT(GRID_INDEX)
+JUMP(reveal_mines_loop:b)
+reveal_mines_end:
+#template_end
+
+// Add mines to the grid at random avoiding the player start position
+#template_begin ADD_MINES(NUMBER_MINES, PLAYER_START_X, PLAYER_START_Y)
+store MINE_NUMBER 0
+COORDINATES_TO_INDEX(GRID_TEMP_PLAYER, PLAYER_START_X, PLAYER_START_Y)
+add_mines_loop:
+
+// Generate random coordinates
+GET_RANDOM(GRID_INDEX, GRID_SIZE)
+
+// Avoid the player position
+eq GRID_TEMP_PLAYER GRID_INDEX
+JUMP_COND(RETURN, add_mines_loop:b)
+
+// Is there a mine already?
+INDEX_TO_COORDINATES(GRID_TEMP_X, GRID_TEMP_Y, GRID_INDEX)
+HAS_MINE(GRID_TEMP_X, GRID_TEMP_Y)
+JUMP_COND(RETURN, add_mines_loop:b)
+
+// No, so we can add this one
+ADD_MINE(GRID_TEMP_X, GRID_TEMP_Y)
+INCREMENT(MINE_NUMBER)
+
+// Have we done all the mines?
+lt MINE_NUMBER NUMBER_MINES
+JUMP_COND(RETURN, add_mines_loop:b)
+#template_end
+
 // Clear the grid at the start of the game
+#template_begin RESET_GAME()
 CLEAR_GRID()
+CLEAR_MINES()
+ADD_MINES(START_NUMBER_MINES, PLAYER_START_X, PLAYER_START_Y)
+DRAW_GRID()
+#template_end
+
+// Assuming the coordinates are in the grid, this gets the grid
+// coordinates from the raw x, y coordinates
+#template_begin PIXEL_TO_GRID_COORDS(TGT_X, TGT_Y, PIXEL_X, PIXEL_Y)
+div PIXEL_X GRID_SQUARE_SIZE
+copy TGT_X RETURN
+
+sub PIXEL_Y TWENTY
+div RETURN GRID_SQUARE_SIZE
+copy TGT_Y RETURN
+#template_end
+
+// Get the number of neighbouring mines (exluding the coordinate itself)
+#template_begin GET_MINE_COUNT(TGT, X, Y)
+// Store the neighbour coordinates...
+store GRID_TEMP_MINE_COUNT 0
+sub X ONE
+copy GRID_TEMP_NEIGHBOUR_LEFT RETURN
+add X ONE
+copy GRID_TEMP_NEIGHBOUR_RIGHT RETURN
+sub Y ONE
+copy GRID_TEMP_NEIGHBOUR_TOP RETURN
+add Y ONE
+copy GRID_TEMP_NEIGHBOUR_BOTTOM RETURN
+
+// Check each one
+
+// Left
+lt GRID_TEMP_NEIGHBOUR_LEFT ZERO
+JUMP_COND(RETURN, get_mine_count_skip:f)
+HAS_MINE(GRID_TEMP_NEIGHBOUR_LEFT, Y)
+JUMP_NOT_COND(RETURN, get_mine_count_skip:f)
+INCREMENT(GRID_TEMP_MINE_COUNT)
+get_mine_count_skip:
+
+// Top left
+lt GRID_TEMP_NEIGHBOUR_LEFT ZERO
+JUMP_COND(RETURN, get_mine_count_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP ZERO
+JUMP_COND(RETURN, get_mine_count_skip:f)
+HAS_MINE(GRID_TEMP_NEIGHBOUR_LEFT, GRID_TEMP_NEIGHBOUR_TOP)
+JUMP_NOT_COND(RETURN, get_mine_count_skip:f)
+INCREMENT(GRID_TEMP_MINE_COUNT)
+get_mine_count_skip:
+
+// Right
+gte GRID_TEMP_NEIGHBOUR_RIGHT GRID_WIDTH
+JUMP_COND(RETURN, get_mine_count_skip:f)
+HAS_MINE(GRID_TEMP_NEIGHBOUR_RIGHT, Y)
+JUMP_NOT_COND(RETURN, get_mine_count_skip:f)
+INCREMENT(GRID_TEMP_MINE_COUNT)
+get_mine_count_skip:
+
+// Top right
+gte GRID_TEMP_NEIGHBOUR_RIGHT GRID_WIDTH
+JUMP_COND(RETURN, get_mine_count_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP ZERO
+JUMP_COND(RETURN, get_mine_count_skip:f)
+HAS_MINE(GRID_TEMP_NEIGHBOUR_RIGHT, GRID_TEMP_NEIGHBOUR_TOP)
+JUMP_NOT_COND(RETURN, get_mine_count_skip:f)
+INCREMENT(GRID_TEMP_MINE_COUNT)
+get_mine_count_skip:
+
+// Top
+lt GRID_TEMP_NEIGHBOUR_TOP ZERO
+JUMP_COND(RETURN, get_mine_count_skip:f)
+HAS_MINE(X, GRID_TEMP_NEIGHBOUR_TOP)
+JUMP_NOT_COND(RETURN, get_mine_count_skip:f)
+INCREMENT(GRID_TEMP_MINE_COUNT)
+get_mine_count_skip:
+
+// Bottom left
+lt GRID_TEMP_NEIGHBOUR_LEFT ZERO
+JUMP_COND(RETURN, get_mine_count_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM GRID_HEIGHT
+JUMP_COND(RETURN, get_mine_count_skip:f)
+HAS_MINE(GRID_TEMP_NEIGHBOUR_LEFT, GRID_TEMP_NEIGHBOUR_BOTTOM)
+JUMP_NOT_COND(RETURN, get_mine_count_skip:f)
+INCREMENT(GRID_TEMP_MINE_COUNT)
+get_mine_count_skip:
+
+// Bottom
+gte GRID_TEMP_NEIGHBOUR_BOTTOM GRID_HEIGHT
+JUMP_COND(RETURN, get_mine_count_skip:f)
+HAS_MINE(X, GRID_TEMP_NEIGHBOUR_BOTTOM)
+JUMP_NOT_COND(RETURN, get_mine_count_skip:f)
+INCREMENT(GRID_TEMP_MINE_COUNT)
+get_mine_count_skip:
+
+// Bottom right
+gte GRID_TEMP_NEIGHBOUR_RIGHT GRID_WIDTH
+JUMP_COND(RETURN, get_mine_count_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM GRID_HEIGHT
+JUMP_COND(RETURN, get_mine_count_skip:f)
+HAS_MINE(GRID_TEMP_NEIGHBOUR_RIGHT, GRID_TEMP_NEIGHBOUR_BOTTOM)
+JUMP_NOT_COND(RETURN, get_mine_count_skip:f)
+INCREMENT(GRID_TEMP_MINE_COUNT)
+get_mine_count_skip:
+copy TGT GRID_TEMP_MINE_COUNT
+#template_end
+
+// Has this coordinate been pushed down? (Or mine revealed)
+#template_begin IS_PUSHED(X, Y)
+GET_GRID(GRID_TEMP_2, X, Y)
+store GRID_TEMP_3 0
+
+eq GRID_TEMP_2 GRID_UNPUSHED_NONE
+JUMP_COND(RETURN, is_pushed_end:f)
+
+eq GRID_TEMP_2 GRID_UNPUSHED_FLAG
+JUMP_COND(RETURN, is_pushed_end:f)
+
+eq GRID_TEMP_2 GRID_UNPUSHED_QUESTION_MARK
+JUMP_COND(RETURN, is_pushed_end:f)
+
+// It is actually pushed!
+store GRID_TEMP_3 1
+is_pushed_end:
+copy RETURN GRID_TEMP_3
+#template_end
+
+// Push a square and reveal the right number of mines. This assumes the square is not itself a mine
+// or else it doesn't make much sense to call this...
+#template_begin GET_AND_REVEAL_NUMBER_MINES(TGT, X, Y)
+GET_MINE_COUNT(TGT, X, Y)
+GET_MINES_VALUE(GRID_TEMP_6, TGT)
+SET_GRID(X, Y, GRID_TEMP_6)
+DRAW_GRID_SQUARE(X, Y)
+#template_end
+
+// This is hard. Reveal all the zero squares from a coordinate with zero mines...
+// Assumes the start coordinate is already revealed...
+#template_begin REVEAL_ALL_ZEROES(START_X, START_Y)
+
+// Initialise the stack with the start position
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, START_X, START_Y)
+STACK_CLEAR(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK)
+STACK_PUSH(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK, GRID_TEMP_INDEX)
+
+// While the stack is not empty...
+reveal_all_zeroes_loop:
+eq GRID_ZEROES_STACK_SIZE ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_end:f)
+
+// Get the next coordinate to check...
+STACK_POP(GRID_TEMP_INDEX, GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK)
+INDEX_TO_COORDINATES(GRID_TEMP_REVEAL_X, GRID_TEMP_REVEAL_Y, GRID_TEMP_INDEX)
+
+// Reveal each relevant coordinate... Note we know the coordinates we are checking are not mines
+sub GRID_TEMP_REVEAL_X ONE
+copy GRID_TEMP_NEIGHBOUR_LEFT_2 RETURN
+add GRID_TEMP_REVEAL_X ONE
+copy GRID_TEMP_NEIGHBOUR_RIGHT_2 RETURN
+sub GRID_TEMP_REVEAL_Y ONE
+copy GRID_TEMP_NEIGHBOUR_TOP_2 RETURN
+add GRID_TEMP_REVEAL_Y ONE
+copy GRID_TEMP_NEIGHBOUR_BOTTOM_2 RETURN
+
+// Left
+lt GRID_TEMP_NEIGHBOUR_LEFT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+IS_PUSHED(GRID_TEMP_NEIGHBOUR_LEFT_2, GRID_TEMP_REVEAL_Y)
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+// Reveal it, and if there are no mines add it to the stack
+GET_AND_REVEAL_NUMBER_MINES(GRID_TEMP_MINE_COUNT_2, GRID_TEMP_NEIGHBOUR_LEFT_2, GRID_TEMP_REVEAL_Y)
+neq GRID_TEMP_MINE_COUNT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, GRID_TEMP_NEIGHBOUR_LEFT_2, GRID_TEMP_REVEAL_Y)
+STACK_PUSH(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK, GRID_TEMP_INDEX)
+
+reveal_all_zeroes_skip:
+
+// Top left
+lt GRID_TEMP_NEIGHBOUR_LEFT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+IS_PUSHED(GRID_TEMP_NEIGHBOUR_LEFT_2, GRID_TEMP_NEIGHBOUR_TOP_2)
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+// Reveal it, and if there are no mines add it to the stack
+GET_AND_REVEAL_NUMBER_MINES(GRID_TEMP_MINE_COUNT_2, GRID_TEMP_NEIGHBOUR_LEFT_2, GRID_TEMP_NEIGHBOUR_TOP_2)
+neq GRID_TEMP_MINE_COUNT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, GRID_TEMP_NEIGHBOUR_LEFT_2, GRID_TEMP_NEIGHBOUR_TOP_2)
+STACK_PUSH(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK, GRID_TEMP_INDEX)
+
+reveal_all_zeroes_skip:
+
+// Right
+gte GRID_TEMP_NEIGHBOUR_RIGHT_2 GRID_WIDTH
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+IS_PUSHED(GRID_TEMP_NEIGHBOUR_RIGHT_2, GRID_TEMP_REVEAL_Y)
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+// Reveal it, and if there are no mines add it to the stack
+GET_AND_REVEAL_NUMBER_MINES(GRID_TEMP_MINE_COUNT_2, GRID_TEMP_NEIGHBOUR_RIGHT_2, GRID_TEMP_REVEAL_Y)
+neq GRID_TEMP_MINE_COUNT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, GRID_TEMP_NEIGHBOUR_RIGHT_2, GRID_TEMP_REVEAL_Y)
+STACK_PUSH(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK, GRID_TEMP_INDEX)
+
+reveal_all_zeroes_skip:
+
+// Top right
+gte GRID_TEMP_NEIGHBOUR_RIGHT_2 GRID_WIDTH
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+IS_PUSHED(GRID_TEMP_NEIGHBOUR_RIGHT_2, GRID_TEMP_NEIGHBOUR_TOP_2)
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+// Reveal it, and if there are no mines add it to the stack
+GET_AND_REVEAL_NUMBER_MINES(GRID_TEMP_MINE_COUNT_2, GRID_TEMP_NEIGHBOUR_RIGHT_2, GRID_TEMP_NEIGHBOUR_TOP_2)
+neq GRID_TEMP_MINE_COUNT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, GRID_TEMP_NEIGHBOUR_RIGHT_2, GRID_TEMP_NEIGHBOUR_TOP_2)
+STACK_PUSH(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK, GRID_TEMP_INDEX)
+
+reveal_all_zeroes_skip:
+
+// Top
+lt GRID_TEMP_NEIGHBOUR_TOP_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+IS_PUSHED(GRID_TEMP_REVEAL_X, GRID_TEMP_NEIGHBOUR_TOP_2)
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+// Reveal it, and if there are no mines add it to the stack
+GET_AND_REVEAL_NUMBER_MINES(GRID_TEMP_MINE_COUNT_2, GRID_TEMP_REVEAL_X, GRID_TEMP_NEIGHBOUR_TOP_2)
+neq GRID_TEMP_MINE_COUNT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, GRID_TEMP_REVEAL_X, GRID_TEMP_NEIGHBOUR_TOP_2)
+STACK_PUSH(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK, GRID_TEMP_INDEX)
+
+reveal_all_zeroes_skip:
+
+// Bottom left
+lt GRID_TEMP_NEIGHBOUR_LEFT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM_2 GRID_HEIGHT
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+IS_PUSHED(GRID_TEMP_NEIGHBOUR_LEFT_2, GRID_TEMP_NEIGHBOUR_BOTTOM_2)
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+// Reveal it, and if there are no mines add it to the stack
+GET_AND_REVEAL_NUMBER_MINES(GRID_TEMP_MINE_COUNT_2, GRID_TEMP_NEIGHBOUR_LEFT_2, GRID_TEMP_NEIGHBOUR_BOTTOM_2)
+neq GRID_TEMP_MINE_COUNT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, GRID_TEMP_NEIGHBOUR_LEFT_2, GRID_TEMP_NEIGHBOUR_BOTTOM_2)
+STACK_PUSH(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK, GRID_TEMP_INDEX)
+
+reveal_all_zeroes_skip:
+
+// Bottom
+gte GRID_TEMP_NEIGHBOUR_BOTTOM_2 GRID_HEIGHT
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+IS_PUSHED(GRID_TEMP_REVEAL_X, GRID_TEMP_NEIGHBOUR_BOTTOM_2)
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+// Reveal it, and if there are no mines add it to the stack
+GET_AND_REVEAL_NUMBER_MINES(GRID_TEMP_MINE_COUNT_2, GRID_TEMP_REVEAL_X, GRID_TEMP_NEIGHBOUR_BOTTOM_2)
+neq GRID_TEMP_MINE_COUNT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, GRID_TEMP_REVEAL_X, GRID_TEMP_NEIGHBOUR_BOTTOM_2)
+STACK_PUSH(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK, GRID_TEMP_INDEX)
+
+reveal_all_zeroes_skip:
+
+// Bottom right
+gte GRID_TEMP_NEIGHBOUR_RIGHT_2 GRID_WIDTH
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM_2 GRID_HEIGHT
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+IS_PUSHED(GRID_TEMP_NEIGHBOUR_RIGHT_2, GRID_TEMP_NEIGHBOUR_BOTTOM_2)
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+// Reveal it, and if there are no mines add it to the stack
+GET_AND_REVEAL_NUMBER_MINES(GRID_TEMP_MINE_COUNT_2, GRID_TEMP_NEIGHBOUR_RIGHT_2, GRID_TEMP_NEIGHBOUR_BOTTOM_2)
+neq GRID_TEMP_MINE_COUNT_2 ZERO
+JUMP_COND(RETURN, reveal_all_zeroes_skip:f)
+
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, GRID_TEMP_NEIGHBOUR_RIGHT_2, GRID_TEMP_NEIGHBOUR_BOTTOM_2)
+STACK_PUSH(GRID_ZEROES_STACK_SIZE, GRID_ZEROES_STACK, GRID_TEMP_INDEX)
+
+reveal_all_zeroes_skip:
+
+// Did it!! Phew
+JUMP(reveal_all_zeroes_loop:b)
+
+reveal_all_zeroes_end:
+nop
+#template_end
+
+// Push a square! RESULT contains the outcome of pushing the square = Win, Lose, or Continue
+#template_begin PUSH_SQUARE(X, Y)
+GET_AND_REVEAL_NUMBER_MINES(GRID_TEMP_7, X, Y)
+neq GRID_TEMP_7 ZERO
+JUMP_COND(RETURN, push_square_end:f)
+REVEAL_ALL_ZEROES(X, Y)
+push_square_end:
+nop
+#template_end
 
 grid_end:
 nop
