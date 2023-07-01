@@ -258,7 +258,6 @@ copy GRID_CLEAR_SPACES_REMAINING RETURN
 #template_begin RESET_GAME()
 CLEAR_GRID()
 CLEAR_MINES()
-ADD_MINES(START_NUMBER_MINES, PLAYER_START_X, PLAYER_START_Y)
 DRAW_GRID()
 #template_end
 
@@ -604,6 +603,33 @@ copy RESULT GAME_LOSE
 
 push_square_end:
 nop
+#template_end
+
+// Right click a square on the grid
+#template_begin RIGHT_CLICK_SQUARE(X, Y)
+
+// If the square is already pushed, this is disabled
+IS_PUSHED(X, Y)
+JUMP_COND(RETURN, right_click_square_end:f)
+
+// We cycle between blank, mine and question mark
+GET_GRID(GRID_TEMP_7, X, Y)
+
+copy GRID_TEMP_6 GRID_UNPUSHED_FLAG
+eq GRID_TEMP_7 GRID_UNPUSHED_NONE
+JUMP_COND(RETURN, right_click_square_set:f)
+
+copy GRID_TEMP_6 GRID_UNPUSHED_QUESTION_MARK
+eq GRID_TEMP_7 GRID_UNPUSHED_FLAG
+JUMP_COND(RETURN, right_click_square_set:f)
+
+copy GRID_TEMP_6 GRID_UNPUSHED_NONE
+right_click_square_set:
+
+SET_GRID(X, Y, GRID_TEMP_6)
+DRAW_GRID_SQUARE(X, Y)
+
+right_click_square_end:
 #template_end
 
 // Initialise the number of spaces to the full empty grid
