@@ -16,6 +16,7 @@
 #constant MINES_ARE_PLACED 0x5004
 #constant MINE_COUNT 0x5005
 #constant MINE_COUNT_GRID_VALUE 0x5006
+#constant GAME_RESULT 0x5007
 
 // Should we exit the game
 #template_begin CHECK_QUIT()
@@ -39,6 +40,11 @@ wait
 // Keep processing events until we run out...
 event_loop:
 STORE_EVENT()
+
+// If we finished processing events, return to the main loop
+WAS_NO_EVENT()
+JUMP_COND(RETURN, loop:b)
+
 CHECK_QUIT()
 
 WAS_MOUSE_BUTTON_PRESSED(MOUSE_BUTTON_LEFT)
@@ -61,34 +67,37 @@ ADD_MINES(START_NUMBER_MINES, MOUSE_COORD_X, MOUSE_COORD_Y)
 store MINES_ARE_PLACED 1
 mines_placed:
 
-// If this is a mine, we lose
-HAS_MINE(MOUSE_COORD_X, MOUSE_COORD_Y)
-JUMP_COND(RETURN, lose:f)
+// Try pushing the square...
+PUSH_SQUARE(GAME_RESULT, MOUSE_COORD_X, MOUSE_COORD_Y)
 
-// We are alive! Draw the number of mines
-PUSH_SQUARE(MOUSE_COORD_X, MOUSE_COORD_Y)
+eq GAME_RESULT GAME_WIN
+JUMP_COND(RETURN, win:f)
+
+eq GAME_RESULT GAME_LOSE
+JUMP_COND(RETURN, lose:f)
 
 JUMP(event_loop:b)
 
 not_inside_grid:
+
 // TODO: handle other locations
+
+JUMP(event_loop:b)
 
 mouse_event_button_left_end:
 
 // other events go here
 
-// If we finished processing events, return to the main loop
-WAS_NO_EVENT()
-JUMP_COND(RETURN, loop:)
+JUMP(event_loop:b)
 
-// Otherwise look at the next event
-JUMP(event_loop:)
-
+// We lost the game! :(
 lose:
-// Oh no! Show all the mines...
-REVEAL_MINES()
-SET_GRID(MOUSE_COORD_X, MOUSE_COORD_Y, GRID_PUSHED_MINE_HIGHLIGHTED)
-DRAW_GRID_SQUARE(MOUSE_COORD_X, MOUSE_COORD_Y)
+
+JUMP(event_loop:b)
+
+// We won the game! :)
+win:
+
 JUMP(event_loop:b)
 
 // Exit the game
