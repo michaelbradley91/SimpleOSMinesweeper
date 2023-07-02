@@ -6,7 +6,7 @@
 #include "./src/memory_map.sos"
 
 #constant PLAY_BUTTON_RECT 0x1100
-#constant HELP_BUTTON_RECT 0x1101
+#constant MUSIC_BUTTON_RECT 0x1101
 #constant RADAR_RECT 0x1102
 
 #constant MINES_DIGIT_1_RECT 0x1103
@@ -41,7 +41,7 @@ JUMP_COND(INCLUDE_COORDINATES, coordinates_end:f)
 copy INCLUDE_COORDINATES ONE
 
 store PLAY_BUTTON_RECT rect(1, 1, 15, 15)
-store HELP_BUTTON_RECT rect(18, 1, 15, 15)
+store MUSIC_BUTTON_RECT rect(18, 1, 15, 15)
 store RADAR_RECT rect(73, 3, 13, 13)
 store MINES_DIGIT_1_RECT rect(88, 3, 8, 13)
 store MINES_DIGIT_2_RECT rect(97, 3, 8, 13)

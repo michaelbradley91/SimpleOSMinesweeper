@@ -58,7 +58,9 @@
         "./Assets/ThreeMines.png",
         "./Assets/TwoMines.png",
         "./Assets/UnhappySmile.png",
-        "./Assets/WinSmile.png"
+        "./Assets/WinSmile.png",
+        "./Assets/MusicPushed.png",
+        "./Assets/MusicUnpushed.png"
     ],
     "sounds": [
         "./Assets/mixkit-explosion-with-rocks-debris-1703.wav",

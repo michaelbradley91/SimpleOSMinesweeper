@@ -106,17 +106,17 @@ JUMP(event_loop:b)
 
 not_inside_play_button:
 
-// Are we on the help button?
-IS_WITHIN_RECT(MOUSE_PIXEL_X, MOUSE_PIXEL_Y, HELP_BUTTON_RECT)
-JUMP_NOT_COND(RETURN, not_inside_help_button:f)
+// Are we on the music button?
+IS_WITHIN_RECT(MOUSE_PIXEL_X, MOUSE_PIXEL_Y, MUSIC_BUTTON_RECT)
+JUMP_NOT_COND(RETURN, not_inside_music_button:f)
 
-// Press down the help button
+// Press down the music button
 play_sound SOUND_EFFECT_PUSH_VOLUME SOUND_EFFECT_PUSH
-draw HELP_BUTTON_RECT SPRITE_HELPPUSHED
+draw MUSIC_BUTTON_RECT SPRITE_MUSICPUSHED
 
-// TODO: some kind of help
+// TODO: change the music!
 
-not_inside_help_button:
+not_inside_music_button:
 
 // Are we on the quit button?
 IS_WITHIN_RECT(MOUSE_PIXEL_X, MOUSE_PIXEL_Y, QUIT_RECT)
@@ -176,7 +176,7 @@ JUMP_NOT_COND(RETURN, mouse_event_button_left_released_end:f)
 // Unpress all buttons
 store ANIMATOR_SMILE_PRESSED 0
 UPDATE_SMILE()
-draw HELP_BUTTON_RECT SPRITE_HELPUNPUSHED
+draw MUSIC_BUTTON_RECT SPRITE_MUSICUNPUSHED
 draw PLAY_BUTTON_RECT SPRITE_PLAYUNPUSHED
 
 JUMP(event_loop:b)

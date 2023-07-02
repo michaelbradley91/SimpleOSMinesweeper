@@ -58,6 +58,8 @@
 #constant SPRITE_TWOMINES 0x2033
 #constant SPRITE_UNHAPPYSMILE 0x2034
 #constant SPRITE_WINSMILE 0x2035
+#constant SPRITE_MUSICPUSHED 0x2036
+#constant SPRITE_MUSICUNPUSHED 0x2037
 
 #constant MUSIC_RELAXED 0x20a0
 #constant MUSIC_RELAXED_VOLUME 0x20a1
@@ -128,6 +130,8 @@ store SPRITE_THREEMINES sprite("./Assets/ThreeMines.png")
 store SPRITE_TWOMINES sprite("./Assets/TwoMines.png")
 store SPRITE_UNHAPPYSMILE sprite("./Assets/UnhappySmile.png")
 store SPRITE_WINSMILE sprite("./Assets/WinSmile.png")
+store SPRITE_MUSICPUSHED sprite("./Assets/MusicPushed.png")
+store SPRITE_MUSICUNPUSHED sprite("./Assets/MusicUnpushed.png")
 
 store MUSIC_RELAXED music("./Assets/Wallpaper.mp3")
 store MUSIC_RELAXED_VOLUME 20000
