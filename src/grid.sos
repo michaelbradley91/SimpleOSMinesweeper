@@ -5,6 +5,7 @@
 #include "src/memory_map.sos"
 #include "src/coordinates.sos"
 #include "src/assets.sos"
+#include "src/animator.sos"
 
 // The meaning of different grid values
 #constant GRID_UNPUSHED_NONE 0x3001
@@ -51,6 +52,8 @@
 #constant GRID_TEMP_MINE_COUNT_2 0x3217
 #constant GRID_TEMP_7 0x3218
 #constant GRID_CLEAR_SPACES_REMAINING 0x3219
+#constant GRID_MINES_REMAINING 0x321a
+#constant GRID_TEMP_8 0x321b
 
 // The grid itself!
 #constant GRID_ARRAY 0x3500
@@ -222,6 +225,8 @@ reveal_mines_continue:
 INCREMENT(GRID_INDEX)
 JUMP(reveal_mines_loop:b)
 reveal_mines_end:
+store GRID_MINES_REMAINING 0
+UPDATE_MINE_COUNT(GRID_MINES_REMAINING)
 #template_end
 
 // Add mines to the grid at random avoiding the player start position
@@ -258,6 +263,7 @@ copy GRID_CLEAR_SPACES_REMAINING RETURN
 #template_begin RESET_GAME()
 CLEAR_GRID()
 CLEAR_MINES()
+copy GRID_MINES_REMAINING START_NUMBER_MINES
 DRAW_GRID()
 #template_end
 
@@ -626,6 +632,23 @@ JUMP_COND(RETURN, right_click_square_set:f)
 copy GRID_TEMP_6 GRID_UNPUSHED_NONE
 right_click_square_set:
 
+// If we just placed a mine flag, reduce the mine count by one
+neq GRID_TEMP_6 GRID_UNPUSHED_FLAG
+JUMP_COND(RETURN, right_click_skip_mine_flag:f)
+DECREMENT(GRID_MINES_REMAINING)
+UPDATE_MINE_COUNT(GRID_MINES_REMAINING)
+JUMP(right_click_square_apply:f)
+
+right_click_skip_mine_flag:
+// If we just put down a question mark, we removed a mine flag so increase the mine count by one
+neq GRID_TEMP_6 GRID_UNPUSHED_QUESTION_MARK
+JUMP_COND(RETURN, right_click_square_apply:f)
+INCREMENT(GRID_MINES_REMAINING)
+UPDATE_MINE_COUNT(GRID_MINES_REMAINING)
+JUMP(right_click_square_apply:f)
+
+// Otherwise just update the grid
+right_click_square_apply:
 SET_GRID(X, Y, GRID_TEMP_6)
 DRAW_GRID_SQUARE(X, Y)
 
@@ -634,6 +657,7 @@ right_click_square_end:
 
 // Initialise the number of spaces to the full empty grid
 copy GRID_CLEAR_SPACES_REMAINING GRID_SIZE
+copy GRID_MINES_REMAINING START_NUMBER_MINES
 
 grid_end:
 nop

@@ -57,6 +57,19 @@
 #constant SPRITE_THREEMINES 0x2032
 #constant SPRITE_TWOMINES 0x2033
 #constant SPRITE_UNHAPPYSMILE 0x2034
+#constant SPRITE_WINSMILE 0x2035
+
+#constant MUSIC_RELAXED 0x20a0
+#constant MUSIC_RELAXED_VOLUME 0x20a1
+#constant MUSIC_FIGHT 0x20a2
+#constant MUSIC_FIGHT_VOLUME 0x20a3
+
+#constant SOUND_EFFECT_LOSE 0x20c0
+#constant SOUND_EFFECT_WIN 0x20c2
+#constant SOUND_EFFECT_LOSE_VOLUME 0x20c1
+#constant SOUND_EFFECT_WIN_VOLUME 0x20c3
+#constant SOUND_EFFECT_PUSH 0x20c4
+#constant SOUND_EFFECT_PUSH_VOLUME 0x20c5
 
 JUMP_COND(INCLUDE_ASSETS, assets_ends:f)
 copy INCLUDE_ASSETS ONE
@@ -114,6 +127,19 @@ store SPRITE_SMILEPUSHED sprite("./Assets/SmilePushed.png")
 store SPRITE_THREEMINES sprite("./Assets/ThreeMines.png")
 store SPRITE_TWOMINES sprite("./Assets/TwoMines.png")
 store SPRITE_UNHAPPYSMILE sprite("./Assets/UnhappySmile.png")
+store SPRITE_WINSMILE sprite("./Assets/WinSmile.png")
+
+store MUSIC_RELAXED music("./Assets/Wallpaper.mp3")
+store MUSIC_RELAXED_VOLUME 20000
+store MUSIC_FIGHT music("./Assets/fight-142564.mp3")
+store MUSIC_FIGHT_VOLUME 20000
+
+store SOUND_EFFECT_WIN sound("./Assets/mixkit-girls-audience-applause-510.wav")
+store SOUND_EFFECT_WIN_VOLUME 50000
+store SOUND_EFFECT_LOSE sound("./Assets/mixkit-explosion-with-rocks-debris-1703.wav")
+store SOUND_EFFECT_LOSE_VOLUME 50000
+store SOUND_EFFECT_PUSH sound("./Assets/mixkit-single-key-press-in-a-laptop-2541.wav")
+store SOUND_EFFECT_PUSH_VOLUME 30000
 
 // Get the right sprite based on the mine count
 #template_begin GET_SPRITE_FOR_MINE_COUNT(TGT, COUNT)
@@ -191,51 +217,51 @@ nop
 
 // Find the right animation frame for the clock. The FRAME number should be between 0 and 11
 #template_begin GET_CLOCK_ANIMATION_FRAME(TGT, FRAME)
-copy TGT SPRITE_CLOCK1
+copy TGT SPRITE_CLOCK12
 eq FRAME ZERO
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK2
+copy TGT SPRITE_CLOCK1
 eq FRAME ONE
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK3
+copy TGT SPRITE_CLOCK2
 eq FRAME TWO
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK4
+copy TGT SPRITE_CLOCK3
 eq FRAME THREE
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK5
+copy TGT SPRITE_CLOCK4
 eq FRAME FOUR
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK6
+copy TGT SPRITE_CLOCK5
 eq FRAME FIVE
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK7
+copy TGT SPRITE_CLOCK6
 eq FRAME SIX
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK8
+copy TGT SPRITE_CLOCK7
 eq FRAME SEVEN
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK9
+copy TGT SPRITE_CLOCK8
 eq FRAME EIGHT
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK10
+copy TGT SPRITE_CLOCK9
 eq FRAME NINE
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK11
+copy TGT SPRITE_CLOCK10
 eq FRAME TEN
 JUMP_COND(RETURN, found_clock_animation_frame:f)
 
-copy TGT SPRITE_CLOCK12
+copy TGT SPRITE_CLOCK11
 found_clock_animation_frame:
 nop
 #template_end

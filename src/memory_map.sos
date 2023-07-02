@@ -50,6 +50,10 @@
 #constant EVENT_ADDRESS 0x51a
 #constant TWO_TO_THE_SIXTEEN 0x51b
 #constant TWO_TO_THE_THIRTY_TWO 0x51c
+#constant ONE_HUNDRED 0x51d
+#constant ONE_THOUSAND 0x51e
+#constant TEN_THOUSAND 0x51f
+
 /*
  * Include checks. This allows us to have logic in files
  * as they are included without accidentally running it
@@ -90,6 +94,7 @@
 #constant GAME_WIN 0x21a0
 #constant GAME_LOSE 0x21a1
 #constant GAME_CONTINUE 0x21a2
+#constant GAME_RESULT 0x21a3
 
 // Space reserved for the grid data
 #constant GRID_START 0x3000
@@ -311,6 +316,9 @@ store SIXTEEN 16
 store TWENTY 20
 store TWO_TO_THE_SIXTEEN 0x10000
 store TWO_TO_THE_THIRTY_TWO 0x100000000
+store ONE_HUNDRED 100
+store ONE_THOUSAND 1000
+store TEN_THOUSAND 10000
 
 // Game parameters
 store GRID_WIDTH 20
