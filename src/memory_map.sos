@@ -96,6 +96,10 @@
 #constant GAME_CONTINUE 0x21a2
 #constant GAME_RESULT 0x21a3
 
+// Music selection
+#constant ACTIVE_MUSIC 0x21d0
+#constant ACTIVE_MUSIC_VOLUME 0x21d1
+
 // Space reserved for the grid data
 #constant GRID_START 0x3000
 #constant GRID_END 0x3FFF

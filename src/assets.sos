@@ -73,6 +73,9 @@
 #constant SOUND_EFFECT_PUSH 0x20c4
 #constant SOUND_EFFECT_PUSH_VOLUME 0x20c5
 
+#constant ASSETS_TEMP_1 0x20e0
+#constant ASSETS_TEMP_2 0x20e1
+
 JUMP_COND(INCLUDE_ASSETS, assets_ends:f)
 copy INCLUDE_ASSETS ONE
 
@@ -317,6 +320,45 @@ copy TGT SPRITE_DIGITNONE
 found_sprite_for_digit:
 nop
 #template_end
+
+// Toggle the music between the available tracks
+#template_begin ROTATE_MUSIC()
+copy ASSETS_TEMP_1 NEGATIVE_ONE
+copy ASSETS_TEMP_2 ZERO
+eq ACTIVE_MUSIC MUSIC_FIGHT
+JUMP_COND(RETURN, rotate_music_end:f)
+
+copy ASSETS_TEMP_1 MUSIC_RELAXED
+copy ASSETS_TEMP_2 MUSIC_RELAXED_VOLUME
+eq ACTIVE_MUSIC NEGATIVE_ONE
+JUMP_COND(RETURN, rotate_music_end:f)
+
+copy ASSETS_TEMP_1 MUSIC_FIGHT
+copy ASSETS_TEMP_2 MUSIC_FIGHT_VOLUME
+eq ACTIVE_MUSIC MUSIC_RELAXED
+JUMP_COND(RETURN, rotate_music_end:f)
+
+rotate_music_end:
+copy ACTIVE_MUSIC ASSETS_TEMP_1
+copy ACTIVE_MUSIC_VOLUME ASSETS_TEMP_2
+#template_end
+
+// Play the active music
+#template_begin PLAY_MUSIC()
+
+neq ACTIVE_MUSIC NEGATIVE_ONE
+JUMP_COND(RETURN, play_music_skip_silence:f)
+stop_music
+JUMP(play_music_end:f)
+
+play_music_skip_silence:
+play_music ACTIVE_MUSIC_VOLUME ACTIVE_MUSIC
+
+play_music_end:
+#template_end
+
+store ACTIVE_MUSIC MUSIC_RELAXED
+store ACTIVE_MUSIC_VOLUME MUSIC_RELAXED_VOLUME
 
 assets_ends:
 nop

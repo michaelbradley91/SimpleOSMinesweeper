@@ -16,6 +16,7 @@
 #constant MINES_ARE_PLACED 0x5004
 #constant MINE_COUNT 0x5005
 #constant MINE_COUNT_GRID_VALUE 0x5006
+#constant MUSIC_PAUSED 0x5007
 
 // Should we exit the game
 #template_begin CHECK_QUIT()
@@ -28,13 +29,21 @@ RESET_GAME()
 INIT_ANIMATIONS()
 copy GAME_RESULT GAME_CONTINUE
 store MINES_ARE_PLACED 0
+
+// Restart the music
+neq MUSIC_PAUSED ONE
+JUMP_COND(RETURN, reset_end:f)
+store MUSIC_PAUSED 0
+PLAY_MUSIC()
+reset_end:
 #template_end
 
 // Draw the background
 draw SCREEN_RECT SPRITE_MINESWEEPERBACKGROUND
 
 // Play the music!
-play_music MUSIC_RELAXED_VOLUME MUSIC_RELAXED
+PLAY_MUSIC()
+store MUSIC_PAUSED 0
 
 // Initialise data in the game
 copy GAME_RESULT GAME_CONTINUE
@@ -114,7 +123,10 @@ JUMP_NOT_COND(RETURN, not_inside_music_button:f)
 play_sound SOUND_EFFECT_PUSH_VOLUME SOUND_EFFECT_PUSH
 draw MUSIC_BUTTON_RECT SPRITE_MUSICPUSHED
 
-// TODO: change the music!
+// Change the music!
+ROTATE_MUSIC()
+
+JUMP(event_loop:b)
 
 not_inside_music_button:
 
@@ -134,6 +146,8 @@ JUMP_NOT_COND(RETURN, not_inside_smiley_face:f)
 play_sound SOUND_EFFECT_PUSH_VOLUME SOUND_EFFECT_PUSH
 draw FACE_RECT SPRITE_SMILEPUSHED
 store ANIMATOR_SMILE_PRESSED 1
+
+JUMP(event_loop:b)
 
 not_inside_smiley_face:
 
@@ -189,13 +203,15 @@ JUMP(event_loop:b)
 
 // We lost the game! :(
 lose:
-
+stop_music
+store MUSIC_PAUSED 1
 play_sound SOUND_EFFECT_LOSE_VOLUME SOUND_EFFECT_LOSE
 JUMP(event_loop:b)
 
 // We won the game! :)
 win:
-
+stop_music
+store MUSIC_PAUSED 1
 play_sound SOUND_EFFECT_WIN_VOLUME SOUND_EFFECT_WIN
 REVEAL_MINES()
 JUMP(event_loop:b)
