@@ -141,12 +141,12 @@ store MUSIC_RELAXED_VOLUME 20000
 store MUSIC_FIGHT music("./Assets/fight-142564.mp3")
 store MUSIC_FIGHT_VOLUME 20000
 
-store SOUND_EFFECT_WIN sound("./Assets/mixkit-girls-audience-applause-510.wav")
+store SOUND_EFFECT_WIN sound("./Assets/mixkit-girls-audience-applause-510.mp3")
 store SOUND_EFFECT_WIN_VOLUME 50000
-store SOUND_EFFECT_LOSE sound("./Assets/mixkit-explosion-with-rocks-debris-1703.wav")
+store SOUND_EFFECT_LOSE sound("./Assets/mixkit-explosion-with-rocks-debris-1703.mp3")
 store SOUND_EFFECT_LOSE_VOLUME 50000
-store SOUND_EFFECT_PUSH sound("./Assets/mixkit-single-key-press-in-a-laptop-2541.wav")
-store SOUND_EFFECT_PUSH_VOLUME 30000
+store SOUND_EFFECT_PUSH sound("./Assets/mixkit-single-key-press-in-a-laptop-2541.mp3")
+store SOUND_EFFECT_PUSH_VOLUME 50000
 
 // Get the right sprite based on the mine count
 #template_begin GET_SPRITE_FOR_MINE_COUNT(TGT, COUNT)
@@ -321,28 +321,6 @@ found_sprite_for_digit:
 nop
 #template_end
 
-// Toggle the music between the available tracks
-#template_begin ROTATE_MUSIC()
-copy ASSETS_TEMP_1 NEGATIVE_ONE
-copy ASSETS_TEMP_2 ZERO
-eq ACTIVE_MUSIC MUSIC_FIGHT
-JUMP_COND(RETURN, rotate_music_end:f)
-
-copy ASSETS_TEMP_1 MUSIC_RELAXED
-copy ASSETS_TEMP_2 MUSIC_RELAXED_VOLUME
-eq ACTIVE_MUSIC NEGATIVE_ONE
-JUMP_COND(RETURN, rotate_music_end:f)
-
-copy ASSETS_TEMP_1 MUSIC_FIGHT
-copy ASSETS_TEMP_2 MUSIC_FIGHT_VOLUME
-eq ACTIVE_MUSIC MUSIC_RELAXED
-JUMP_COND(RETURN, rotate_music_end:f)
-
-rotate_music_end:
-copy ACTIVE_MUSIC ASSETS_TEMP_1
-copy ACTIVE_MUSIC_VOLUME ASSETS_TEMP_2
-#template_end
-
 // Play the active music
 #template_begin PLAY_MUSIC()
 
@@ -357,8 +335,34 @@ play_music ACTIVE_MUSIC_VOLUME ACTIVE_MUSIC
 play_music_end:
 #template_end
 
-store ACTIVE_MUSIC MUSIC_RELAXED
-store ACTIVE_MUSIC_VOLUME MUSIC_RELAXED_VOLUME
+// Toggle the music between the available tracks
+#template_begin ROTATE_MUSIC()
+store DEBUG 0x111111
+copy ASSETS_TEMP_1 NEGATIVE_ONE
+copy ASSETS_TEMP_2 ZERO
+eq ACTIVE_MUSIC MUSIC_FIGHT
+JUMP_COND(RETURN, rotate_music_end:f)
+
+store DEBUG 0x222222
+copy ASSETS_TEMP_1 MUSIC_RELAXED
+copy ASSETS_TEMP_2 MUSIC_RELAXED_VOLUME
+eq ACTIVE_MUSIC NEGATIVE_ONE
+JUMP_COND(RETURN, rotate_music_end:f)
+
+store DEBUG 0x333333
+copy ASSETS_TEMP_1 MUSIC_FIGHT
+copy ASSETS_TEMP_2 MUSIC_FIGHT_VOLUME
+eq ACTIVE_MUSIC MUSIC_RELAXED
+JUMP_COND(RETURN, rotate_music_end:f)
+
+rotate_music_end:
+copy ACTIVE_MUSIC ASSETS_TEMP_1
+copy ACTIVE_MUSIC_VOLUME ASSETS_TEMP_2
+PLAY_MUSIC()
+#template_end
+
+copy ACTIVE_MUSIC MUSIC_RELAXED
+copy ACTIVE_MUSIC_VOLUME MUSIC_RELAXED_VOLUME
 
 assets_ends:
 nop
