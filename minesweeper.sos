@@ -17,6 +17,7 @@
 #constant MINE_COUNT 0x5005
 #constant MINE_COUNT_GRID_VALUE 0x5006
 #constant MUSIC_PAUSED 0x5007
+#constant OLD_GRID_CLEAR_SPACES_REMAINING 0x5008
 
 // Should we exit the game
 #template_begin CHECK_QUIT()
@@ -87,10 +88,25 @@ ADD_MINES(START_NUMBER_MINES, MOUSE_COORD_X, MOUSE_COORD_Y)
 store MINES_ARE_PLACED 1
 mines_placed:
 
+IS_PUSHED(MOUSE_COORD_X, MOUSE_COORD_Y)
+JUMP_COND(RETURN, highlight_square:f)
+
 // Try pushing the square...
 play_sound SOUND_EFFECT_PUSH_VOLUME SOUND_EFFECT_PUSH
 PUSH_SQUARE(GAME_RESULT, MOUSE_COORD_X, MOUSE_COORD_Y)
+JUMP(check_game_result:f)
 
+highlight_square:
+// Highlight the squares if possible...
+copy OLD_GRID_CLEAR_SPACES_REMAINING GRID_CLEAR_SPACES_REMAINING
+HIGHLIGHT_OR_FILL_SQUARES(MOUSE_COORD_X, MOUSE_COORD_Y, GAME_RESULT)
+
+// If the number of squares left changed, something was pushed, so play the sound
+eq GRID_CLEAR_SPACES_REMAINING OLD_GRID_CLEAR_SPACES_REMAINING
+JUMP_COND(RETURN, check_game_result:f)
+play_sound SOUND_EFFECT_PUSH_VOLUME SOUND_EFFECT_PUSH
+
+check_game_result:
 eq GAME_RESULT GAME_WIN
 JUMP_COND(RETURN, win:f)
 
@@ -192,6 +208,9 @@ store ANIMATOR_SMILE_PRESSED 0
 UPDATE_SMILE()
 draw MUSIC_BUTTON_RECT SPRITE_MUSICUNPUSHED
 draw PLAY_BUTTON_RECT SPRITE_PLAYUNPUSHED
+
+// Unhighlight all squares
+UNHIGHLIGHT_ALL()
 
 JUMP(event_loop:b)
 

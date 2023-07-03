@@ -54,6 +54,14 @@
 #constant GRID_CLEAR_SPACES_REMAINING 0x3219
 #constant GRID_MINES_REMAINING 0x321a
 #constant GRID_TEMP_8 0x321b
+#constant GRID_TEMP_FLAG_COUNT 0x321c
+#constant GRID_TEMP_RESULT 0x321d
+#constant GRID_TEMP_HIGHLIGHT_RESULT 0x321e
+#constant GRID_TEMP_NEIGHBOUR_LEFT_3 0x321f
+#constant GRID_TEMP_NEIGHBOUR_RIGHT_3 0x3220
+#constant GRID_TEMP_NEIGHBOUR_BOTTOM_3 0x3221
+#constant GRID_TEMP_NEIGHBOUR_TOP_3 0x3222
+
 
 // The grid itself!
 #constant GRID_ARRAY 0x3500
@@ -62,6 +70,10 @@
 // An array that acts like a stack
 #constant GRID_ZEROES_STACK_SIZE 0x3700
 #constant GRID_ZEROES_STACK 0x3701
+
+// An array that acts like a stack for highlighted squares
+#constant GRID_HIGHLIGHT_STACK_SIZE 0x3800
+#constant GRID_HIGHLIGHT_STACK 0x3801
 
 JUMP_COND(INCLUDE_GRID, grid_end:f)
 copy INCLUDE_GRID ONE
@@ -109,6 +121,12 @@ ARRAY_SET(GRID_ARRAY, GRID_TEMP_1, VALUE)
 #template_begin GET_GRID(TGT, X, Y)
 COORDINATES_TO_INDEX(GRID_TEMP_1, X, Y)
 ARRAY_GET(TGT, GRID_ARRAY, GRID_TEMP_1)
+#template_end
+
+// Check if a particular square of the grid has a given value
+#template_begin HAS_GRID_VALUE(X, Y, VALUE)
+GET_GRID(GRID_TEMP_2, X, Y)
+eq GRID_TEMP_2 VALUE
 #template_end
 
 // Do not call directly - adds a mine to the grid
@@ -265,6 +283,7 @@ CLEAR_GRID()
 CLEAR_MINES()
 copy GRID_MINES_REMAINING START_NUMBER_MINES
 DRAW_GRID()
+STACK_CLEAR(GRID_HIGHLIGHT_STACK_SIZE, GRID_HIGHLIGHT_STACK)
 #template_end
 
 // Assuming the coordinates are in the grid, this gets the grid
@@ -277,6 +296,97 @@ sub PIXEL_Y TWENTY
 div RETURN GRID_SQUARE_SIZE
 copy TGT_Y RETURN
 #template_end
+
+// Get the number of flags around this square on the grid
+#template_begin GET_FLAG_COUNT(TGT, X, Y)
+// Store the neighbour coordinates...
+store GRID_TEMP_FLAG_COUNT 0
+sub X ONE
+copy GRID_TEMP_NEIGHBOUR_LEFT RETURN
+add X ONE
+copy GRID_TEMP_NEIGHBOUR_RIGHT RETURN
+sub Y ONE
+copy GRID_TEMP_NEIGHBOUR_TOP RETURN
+add Y ONE
+copy GRID_TEMP_NEIGHBOUR_BOTTOM RETURN
+
+// Check each one
+
+// Left
+lt GRID_TEMP_NEIGHBOUR_LEFT ZERO
+JUMP_COND(RETURN, get_flag_count_skip:f)
+HAS_GRID_VALUE(GRID_TEMP_NEIGHBOUR_LEFT, Y, GRID_UNPUSHED_FLAG)
+JUMP_NOT_COND(RETURN, get_flag_count_skip:f)
+INCREMENT(GRID_TEMP_FLAG_COUNT)
+get_flag_count_skip:
+
+// Top left
+lt GRID_TEMP_NEIGHBOUR_LEFT ZERO
+JUMP_COND(RETURN, get_flag_count_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP ZERO
+JUMP_COND(RETURN, get_flag_count_skip:f)
+HAS_GRID_VALUE(GRID_TEMP_NEIGHBOUR_LEFT, GRID_TEMP_NEIGHBOUR_TOP, GRID_UNPUSHED_FLAG)
+JUMP_NOT_COND(RETURN, get_flag_count_skip:f)
+INCREMENT(GRID_TEMP_FLAG_COUNT)
+get_flag_count_skip:
+
+// Right
+gte GRID_TEMP_NEIGHBOUR_RIGHT GRID_WIDTH
+JUMP_COND(RETURN, get_flag_count_skip:f)
+HAS_GRID_VALUE(GRID_TEMP_NEIGHBOUR_RIGHT, Y, GRID_UNPUSHED_FLAG)
+JUMP_NOT_COND(RETURN, get_flag_count_skip:f)
+INCREMENT(GRID_TEMP_FLAG_COUNT)
+get_flag_count_skip:
+
+// Top right
+gte GRID_TEMP_NEIGHBOUR_RIGHT GRID_WIDTH
+JUMP_COND(RETURN, get_flag_count_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP ZERO
+JUMP_COND(RETURN, get_flag_count_skip:f)
+HAS_GRID_VALUE(GRID_TEMP_NEIGHBOUR_RIGHT, GRID_TEMP_NEIGHBOUR_TOP, GRID_UNPUSHED_FLAG)
+JUMP_NOT_COND(RETURN, get_flag_count_skip:f)
+INCREMENT(GRID_TEMP_FLAG_COUNT)
+get_flag_count_skip:
+
+// Top
+lt GRID_TEMP_NEIGHBOUR_TOP ZERO
+JUMP_COND(RETURN, get_flag_count_skip:f)
+HAS_GRID_VALUE(X, GRID_TEMP_NEIGHBOUR_TOP, GRID_UNPUSHED_FLAG)
+JUMP_NOT_COND(RETURN, get_flag_count_skip:f)
+INCREMENT(GRID_TEMP_FLAG_COUNT)
+get_flag_count_skip:
+
+// Bottom left
+lt GRID_TEMP_NEIGHBOUR_LEFT ZERO
+JUMP_COND(RETURN, get_flag_count_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM GRID_HEIGHT
+JUMP_COND(RETURN, get_flag_count_skip:f)
+HAS_GRID_VALUE(GRID_TEMP_NEIGHBOUR_LEFT, GRID_TEMP_NEIGHBOUR_BOTTOM, GRID_UNPUSHED_FLAG)
+JUMP_NOT_COND(RETURN, get_flag_count_skip:f)
+INCREMENT(GRID_TEMP_FLAG_COUNT)
+get_flag_count_skip:
+
+// Bottom
+gte GRID_TEMP_NEIGHBOUR_BOTTOM GRID_HEIGHT
+JUMP_COND(RETURN, get_flag_count_skip:f)
+HAS_GRID_VALUE(X, GRID_TEMP_NEIGHBOUR_BOTTOM, GRID_UNPUSHED_FLAG)
+JUMP_NOT_COND(RETURN, get_flag_count_skip:f)
+INCREMENT(GRID_TEMP_FLAG_COUNT)
+get_flag_count_skip:
+
+// Bottom right
+gte GRID_TEMP_NEIGHBOUR_RIGHT GRID_WIDTH
+JUMP_COND(RETURN, get_flag_count_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM GRID_HEIGHT
+JUMP_COND(RETURN, get_flag_count_skip:f)
+HAS_GRID_VALUE(GRID_TEMP_NEIGHBOUR_RIGHT, GRID_TEMP_NEIGHBOUR_BOTTOM, GRID_UNPUSHED_FLAG)
+JUMP_NOT_COND(RETURN, get_flag_count_skip:f)
+INCREMENT(GRID_TEMP_FLAG_COUNT)
+get_flag_count_skip:
+copy TGT GRID_TEMP_FLAG_COUNT
+
+#template_end
+
 
 // Get the number of neighbouring mines (exluding the coordinate itself)
 #template_begin GET_MINE_COUNT(TGT, X, Y)
@@ -603,8 +713,8 @@ JUMP(push_square_end:f)
 push_square_lost:
 // Oh no! Show all the mines...
 REVEAL_MINES()
-SET_GRID(MOUSE_COORD_X, MOUSE_COORD_Y, GRID_PUSHED_MINE_HIGHLIGHTED)
-DRAW_GRID_SQUARE(MOUSE_COORD_X, MOUSE_COORD_Y)
+SET_GRID(X, Y, GRID_PUSHED_MINE_HIGHLIGHTED)
+DRAW_GRID_SQUARE(X, Y)
 copy RESULT GAME_LOSE
 
 push_square_end:
@@ -653,6 +763,245 @@ SET_GRID(X, Y, GRID_TEMP_6)
 DRAW_GRID_SQUARE(X, Y)
 
 right_click_square_end:
+#template_end
+
+// Store in RETURN 1 if there are enough mine flags around this square for the number of mines it expects
+#template_begin ARE_MINES_RESOLVED(X, Y)
+GET_GRID(GRID_TEMP_8, X, Y)
+GET_MINE_COUNT_FROM_GRID_VALUE(GRID_TEMP_MINE_COUNT_2, GRID_TEMP_8)
+GET_FLAG_COUNT(GRID_TEMP_7, X, Y)
+
+// If the number of mines is less than the number of flags, consider them resolved.
+lte GRID_TEMP_MINE_COUNT_2 GRID_TEMP_7
+#template_end
+
+// Highlight a square, which means show it pushed down with nothing on
+// This template stores the square coordinates in a stack so we can unhighlight later
+#template_begin HIGHLIGHT_SQUARE(X, Y)
+SET_GRID(X, Y, GRID_MINES_0)
+DRAW_GRID_SQUARE(X, Y)
+COORDINATES_TO_INDEX(GRID_TEMP_INDEX, X, Y)
+STACK_PUSH(GRID_HIGHLIGHT_STACK_SIZE, GRID_HIGHLIGHT_STACK, GRID_TEMP_INDEX)
+#template_end
+
+// Unhighlight all squares that were highlighted
+#template_begin UNHIGHLIGHT_ALL()
+unhighlight_all_loop:
+// If the stack is empty, we are done
+eq GRID_HIGHLIGHT_STACK_SIZE ZERO
+JUMP_COND(RETURN, unhighlight_all_end:f)
+
+// Get the highlighted square from the stack
+STACK_POP(GRID_TEMP_INDEX, GRID_HIGHLIGHT_STACK_SIZE, GRID_HIGHLIGHT_STACK)
+INDEX_TO_COORDINATES(GRID_TEMP_X, GRID_TEMP_Y, GRID_TEMP_INDEX)
+
+// Now put it back to a regular unpushed square 
+SET_GRID(GRID_TEMP_X, GRID_TEMP_Y, GRID_UNPUSHED_NONE)
+DRAW_GRID_SQUARE(GRID_TEMP_X, GRID_TEMP_Y)
+JUMP(unhighlight_all_loop:b)
+
+unhighlight_all_end:
+nop
+#template_end
+
+// Highlight a square if a appropriate
+#template_begin TRY_HIGHLIGHT_SQUARE(X, Y)
+
+// Cannot highlight a square that is already pushed
+IS_PUSHED(X, Y)
+JUMP_COND(RETURN, try_highlight_square_end:f)
+
+// Cannot highlight a square that has a mine or question mark by it
+GET_GRID(GRID_TEMP_2, X, Y)
+eq GRID_TEMP_2 GRID_UNPUSHED_QUESTION_MARK
+JUMP_COND(RETURN, try_highlight_square_end:f)
+eq GRID_TEMP_2 GRID_UNPUSHED_FLAG
+JUMP_COND(RETURN, try_highlight_square_end:f)
+
+// We can highlight it, so we should
+HIGHLIGHT_SQUARE(X, Y)
+
+try_highlight_square_end:
+#template_end
+
+// Reveals a square by pushing it. "RESULT" stores if the game was won, lost or continues as a result.
+// The result is aggregated in that - a loss stays as a loss. A win otherwise means a win. Continue has no effect, so result should be initialised to GAME_CONTINUE
+#template_begin TRY_PUSH_SQUARE(X, Y, RESULT)
+
+// Can only push a square that is not pushed
+IS_PUSHED(X, Y)
+JUMP_COND(RETURN, try_push_square_end:f)
+
+// Do not push mine flags!
+HAS_GRID_VALUE(X, Y, GRID_UNPUSHED_FLAG)
+JUMP_COND(RETURN, try_push_square_end:f)
+
+// Now push it
+PUSH_SQUARE(GRID_TEMP_RESULT, X, Y)
+neq GRID_TEMP_RESULT GAME_LOSE
+JUMP_COND(RETURN, try_push_square_lose_skip:f)
+
+// A loss always means a loss
+copy RESULT GAME_LOSE
+JUMP(try_push_square_end:f)
+
+try_push_square_lose_skip:
+
+neq GRID_TEMP_RESULT GAME_WIN
+JUMP_COND(RETURN, try_push_square_end:f)
+
+// A win is applied only if the result is not already lost
+eq RESULT GAME_LOSE
+JUMP_COND(RETURN, try_push_square_end:f)
+
+copy RESULT GAME_WIN
+
+// A continue does nothing to the result
+try_push_square_end:
+nop
+#template_end
+
+// Either highlight the remaining squares on the grid, or fill them in if possible...
+// Returns the game outcome from highlighting the square
+#template_begin HIGHLIGHT_OR_FILL_SQUARES(X, Y, RESULT)
+
+// Initialise result to continue
+copy RESULT GAME_CONTINUE
+
+// Store the neighbour coordinates...
+sub X ONE
+copy GRID_TEMP_NEIGHBOUR_LEFT_3 RETURN
+add X ONE
+copy GRID_TEMP_NEIGHBOUR_RIGHT_3 RETURN
+sub Y ONE
+copy GRID_TEMP_NEIGHBOUR_TOP_3 RETURN
+add Y ONE
+copy GRID_TEMP_NEIGHBOUR_BOTTOM_3 RETURN
+
+ARE_MINES_RESOLVED(X, Y)
+JUMP_COND(RETURN, try_fill_mines:f)
+
+// Mines are not resolved so just highlight squares
+
+// Left
+lt GRID_TEMP_NEIGHBOUR_LEFT_3 ZERO
+JUMP_COND(RETURN, highlight_squares_skip:f)
+TRY_HIGHLIGHT_SQUARE(GRID_TEMP_NEIGHBOUR_LEFT_3, Y)
+highlight_squares_skip:
+
+// Top left
+lt GRID_TEMP_NEIGHBOUR_LEFT_3 ZERO
+JUMP_COND(RETURN, highlight_squares_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP_3 ZERO
+JUMP_COND(RETURN, highlight_squares_skip:f)
+TRY_HIGHLIGHT_SQUARE(GRID_TEMP_NEIGHBOUR_LEFT_3, GRID_TEMP_NEIGHBOUR_TOP_3)
+highlight_squares_skip:
+
+// Right
+gte GRID_TEMP_NEIGHBOUR_RIGHT_3 GRID_WIDTH
+JUMP_COND(RETURN, highlight_squares_skip:f)
+TRY_HIGHLIGHT_SQUARE(GRID_TEMP_NEIGHBOUR_RIGHT_3, Y)
+highlight_squares_skip:
+
+// Top right
+gte GRID_TEMP_NEIGHBOUR_RIGHT_3 GRID_WIDTH
+JUMP_COND(RETURN, highlight_squares_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP_3 ZERO
+JUMP_COND(RETURN, highlight_squares_skip:f)
+TRY_HIGHLIGHT_SQUARE(GRID_TEMP_NEIGHBOUR_RIGHT_3, GRID_TEMP_NEIGHBOUR_TOP_3)
+highlight_squares_skip:
+
+// Top
+lt GRID_TEMP_NEIGHBOUR_TOP_3 ZERO
+JUMP_COND(RETURN, highlight_squares_skip:f)
+TRY_HIGHLIGHT_SQUARE(X, GRID_TEMP_NEIGHBOUR_TOP_3)
+highlight_squares_skip:
+
+// Bottom left
+lt GRID_TEMP_NEIGHBOUR_LEFT_3 ZERO
+JUMP_COND(RETURN, highlight_squares_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM_3 GRID_HEIGHT
+JUMP_COND(RETURN, highlight_squares_skip:f)
+TRY_HIGHLIGHT_SQUARE(GRID_TEMP_NEIGHBOUR_LEFT_3, GRID_TEMP_NEIGHBOUR_BOTTOM_3)
+highlight_squares_skip:
+
+// Bottom
+gte GRID_TEMP_NEIGHBOUR_BOTTOM_3 GRID_HEIGHT
+JUMP_COND(RETURN, highlight_squares_skip:f)
+TRY_HIGHLIGHT_SQUARE(X, GRID_TEMP_NEIGHBOUR_BOTTOM_3)
+highlight_squares_skip:
+
+// Bottom right
+gte GRID_TEMP_NEIGHBOUR_RIGHT_3 GRID_WIDTH
+JUMP_COND(RETURN, highlight_squares_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM_3 GRID_HEIGHT
+JUMP_COND(RETURN, highlight_squares_skip:f)
+TRY_HIGHLIGHT_SQUARE(GRID_TEMP_NEIGHBOUR_RIGHT_3, GRID_TEMP_NEIGHBOUR_BOTTOM_3)
+highlight_squares_skip:
+
+JUMP(highlight_or_fill_square_end:f)
+
+try_fill_mines:
+// Mines are resolved. Try filling them in
+
+// Left
+lt GRID_TEMP_NEIGHBOUR_LEFT_3 ZERO
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+TRY_PUSH_SQUARE(GRID_TEMP_NEIGHBOUR_LEFT_3, Y, RESULT)
+try_fill_mines_skip:
+
+// Top left
+lt GRID_TEMP_NEIGHBOUR_LEFT_3 ZERO
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP_3 ZERO
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+TRY_PUSH_SQUARE(GRID_TEMP_NEIGHBOUR_LEFT_3, GRID_TEMP_NEIGHBOUR_TOP_3, RESULT)
+try_fill_mines_skip:
+
+// Right
+gte GRID_TEMP_NEIGHBOUR_RIGHT_3 GRID_WIDTH
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+TRY_PUSH_SQUARE(GRID_TEMP_NEIGHBOUR_RIGHT_3, Y, RESULT)
+try_fill_mines_skip:
+
+// Top right
+gte GRID_TEMP_NEIGHBOUR_RIGHT_3 GRID_WIDTH
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+lt GRID_TEMP_NEIGHBOUR_TOP_3 ZERO
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+TRY_PUSH_SQUARE(GRID_TEMP_NEIGHBOUR_RIGHT_3, GRID_TEMP_NEIGHBOUR_TOP_3, RESULT)
+try_fill_mines_skip:
+
+// Top
+lt GRID_TEMP_NEIGHBOUR_TOP_3 ZERO
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+TRY_PUSH_SQUARE(X, GRID_TEMP_NEIGHBOUR_TOP_3, RESULT)
+try_fill_mines_skip:
+
+// Bottom left
+lt GRID_TEMP_NEIGHBOUR_LEFT_3 ZERO
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM_3 GRID_HEIGHT
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+TRY_PUSH_SQUARE(GRID_TEMP_NEIGHBOUR_LEFT_3, GRID_TEMP_NEIGHBOUR_BOTTOM_3, RESULT)
+try_fill_mines_skip:
+
+// Bottom
+gte GRID_TEMP_NEIGHBOUR_BOTTOM_3 GRID_HEIGHT
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+TRY_PUSH_SQUARE(X, GRID_TEMP_NEIGHBOUR_BOTTOM_3, RESULT)
+try_fill_mines_skip:
+
+// Bottom right
+gte GRID_TEMP_NEIGHBOUR_RIGHT_3 GRID_WIDTH
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+gte GRID_TEMP_NEIGHBOUR_BOTTOM_3 GRID_HEIGHT
+JUMP_COND(RETURN, try_fill_mines_skip:f)
+TRY_PUSH_SQUARE(GRID_TEMP_NEIGHBOUR_RIGHT_3, GRID_TEMP_NEIGHBOUR_BOTTOM_3, RESULT)
+try_fill_mines_skip:
+
+highlight_or_fill_square_end:
+nop
 #template_end
 
 // Initialise the number of spaces to the full empty grid

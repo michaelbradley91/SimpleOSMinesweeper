@@ -3,7 +3,7 @@
     "screen_width": 320,
     "code_address": 32768,
     "fps": 60,
-    "memory": 65536,
+    "memory": 131072,
     "sprites": [
         "./Assets/BlankMineFlag.png",
         "./Assets/BlankPushed.png",
