@@ -72,6 +72,8 @@
 #constant SOUND_EFFECT_WIN_VOLUME 0x20c3
 #constant SOUND_EFFECT_PUSH 0x20c4
 #constant SOUND_EFFECT_PUSH_VOLUME 0x20c5
+#constant SOUND_EFFECT_FACE_PUSH 0x20c6
+#constant SOUND_EFFECT_FACE_PUSH_VOLUME 0x20c7
 
 #constant ASSETS_TEMP_1 0x20e0
 #constant ASSETS_TEMP_2 0x20e1
@@ -147,6 +149,8 @@ store SOUND_EFFECT_LOSE sound("./Assets/mixkit-explosion-with-rocks-debris-1703.
 store SOUND_EFFECT_LOSE_VOLUME 50000
 store SOUND_EFFECT_PUSH sound("./Assets/mixkit-single-key-press-in-a-laptop-2541.mp3")
 store SOUND_EFFECT_PUSH_VOLUME 50000
+store SOUND_EFFECT_FACE_PUSH sound("./Assets/ah-104621.mp3")
+store SOUND_EFFECT_FACE_PUSH_VOLUME 20000
 
 // Get the right sprite based on the mine count
 #template_begin GET_SPRITE_FOR_MINE_COUNT(TGT, COUNT)
